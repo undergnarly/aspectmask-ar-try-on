@@ -4,6 +4,8 @@ import {
 } from "/assets/vendor/mediapipe/vision_bundle.js";
 
 const TRACKING_HINT = "Move into the frame and look straight ahead";
+const CAMERA_REQUEST_TIMEOUT_MS = 15000;
+const CAMERA_FRAME_TIMEOUT_MS = 10000;
 const TRACKER_TIMEOUT_MS = 30000;
 
 const MASKS = [
@@ -100,16 +102,94 @@ function showError(message) {
   stopCamera();
 }
 
-function withTimeout(promise, milliseconds) {
+function withTimeout(promise, milliseconds, errorName, errorMessage) {
   let timeoutId;
   const timeout = new Promise((_, reject) => {
     timeoutId = setTimeout(() => {
-      const error = new Error("Face tracker loading timed out");
-      error.name = "TrackerTimeoutError";
+      const error = new Error(errorMessage);
+      error.name = errorName;
       reject(error);
     }, milliseconds);
   });
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+}
+
+async function requestCamera() {
+  // Start with the least restrictive constraints. Some Android camera stacks can
+  // stall while negotiating an ideal resolution before returning a stream.
+  const request = navigator.mediaDevices.getUserMedia({
+    audio: false,
+    video: { facingMode: { ideal: "user" } },
+  });
+
+  try {
+    return await withTimeout(
+      request,
+      CAMERA_REQUEST_TIMEOUT_MS,
+      "CameraRequestTimeoutError",
+      "Camera permission was granted, but Android did not return a camera stream"
+    );
+  } catch (error) {
+    if (error?.name === "CameraRequestTimeoutError") {
+      // getUserMedia cannot be cancelled. Stop a stream if Android eventually
+      // resolves the abandoned request after our timeout.
+      request.then((lateStream) => {
+        lateStream.getTracks().forEach((track) => track.stop());
+      }).catch(() => {});
+    }
+    throw error;
+  }
+}
+
+function waitForVideoFrame() {
+  if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && video.videoWidth > 0) {
+    return Promise.resolve();
+  }
+
+  const ready = new Promise((resolve, reject) => {
+    let pollId;
+    let timeoutId;
+    const events = ["loadedmetadata", "loadeddata", "canplay", "playing", "resize"];
+    const cleanup = () => {
+      clearInterval(pollId);
+      clearTimeout(timeoutId);
+      events.forEach((eventName) => video.removeEventListener(eventName, check));
+      video.removeEventListener("error", fail);
+    };
+    const check = () => {
+      if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && video.videoWidth > 0) {
+        cleanup();
+        resolve();
+      }
+    };
+    const fail = () => {
+      cleanup();
+      reject(video.error || new Error("The camera video element failed"));
+    };
+
+    events.forEach((eventName) => video.addEventListener(eventName, check));
+    video.addEventListener("error", fail, { once: true });
+    pollId = setInterval(check, 100);
+    timeoutId = setTimeout(() => {
+      const error = new Error("The camera opened, but no video frame arrived");
+      error.name = "CameraFrameTimeoutError";
+      cleanup();
+      reject(error);
+    }, CAMERA_FRAME_TIMEOUT_MS);
+    check();
+  });
+
+  return ready;
+}
+
+function sizeCanvasToVideo() {
+  const settings = stream?.getVideoTracks?.()[0]?.getSettings?.() || {};
+  const width = video.videoWidth || settings.width || 720;
+  const height = video.videoHeight || settings.height || 1280;
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width;
+    canvas.height = height;
+  }
 }
 
 async function createTracker() {
@@ -143,46 +223,67 @@ async function startCamera() {
   let cameraStarted = false;
   startButton.disabled = true;
   startButton.textContent = "starting camera…";
+  retryButton.disabled = true;
   errorPanel.hidden = true;
 
   if (!navigator.mediaDevices?.getUserMedia) {
     showError("This browser cannot access the camera. Open the preview in Safari or Chrome over HTTPS.");
+    startButton.disabled = false;
+    startButton.textContent = "enable camera";
+    retryButton.disabled = false;
     return;
   }
 
   try {
-    const cameraStream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: {
-        facingMode: "user",
-        width: { ideal: 720 },
-        height: { ideal: 1280 },
-      },
-    });
+    const cameraStream = await requestCamera();
     stream = cameraStream;
-    video.srcObject = stream;
-    await video.play();
     cameraStarted = true;
 
-    canvas.width = video.videoWidth || 720;
-    canvas.height = video.videoHeight || 1280;
+    video.srcObject = stream;
+    video.autoplay = true;
+    video.muted = true;
+    video.playsInline = true;
+
+    // On some Xiaomi/Android Chrome builds video.play() starts the camera (the
+    // green privacy dot appears) but its Promise never resolves. Do not await
+    // that Promise; wait for an actual decoded frame instead.
+    const playResult = video.play();
+    if (playResult?.catch) playResult.catch(() => {});
+
     permissionCard.hidden = true;
     captureButton.disabled = true;
-    hint.textContent = "Loading face tracking…";
+    hint.textContent = "Starting camera…";
     hint.hidden = false;
     lastVideoTime = -1;
     smoothPose = null;
     latestPose = null;
     animationFrame = requestAnimationFrame(renderLoop);
 
-    faceLandmarker = await withTimeout(createTracker(), TRACKER_TIMEOUT_MS);
+    await waitForVideoFrame();
+    if (!stream) return;
+    sizeCanvasToVideo();
+    hint.textContent = "Loading face tracking…";
+
+    faceLandmarker = await withTimeout(
+      createTracker(),
+      TRACKER_TIMEOUT_MS,
+      "TrackerTimeoutError",
+      "Face tracker loading timed out"
+    );
     if (!stream) return;
     captureButton.disabled = false;
     hint.textContent = TRACKING_HINT;
   } catch (error) {
     const denied = error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError";
-    if (error?.name === "TrackerTimeoutError" || cameraStarted) {
+    const busy = error?.name === "NotReadableError" || error?.name === "AbortError";
+    if (error?.name === "TrackerTimeoutError") {
       showError("Face tracking could not finish loading. Check your connection, reload the page, and try again.");
+    } else if (error?.name === "CameraFrameTimeoutError") {
+      showError("The camera opened, but Android did not send video frames. Close other apps using the camera, fully close Chrome, reopen it, and try again.");
+    } else if (error?.name === "CameraRequestTimeoutError") {
+      showError("Android did not finish opening the camera. Close other camera apps, reload Chrome, and try again.");
+    } else if (cameraStarted || busy) {
+      showError("The camera opened but could not start video. Close other apps using the camera, reload Chrome, and try again.");
     } else {
       showError(denied
         ? (isAndroid
@@ -194,6 +295,7 @@ async function startCamera() {
   } finally {
     startButton.disabled = false;
     startButton.textContent = "enable camera";
+    retryButton.disabled = false;
   }
 }
 
@@ -266,6 +368,7 @@ function renderLoop(now) {
     return;
   }
 
+  sizeCanvasToVideo();
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   if (!faceLandmarker) {
     animationFrame = requestAnimationFrame(renderLoop);

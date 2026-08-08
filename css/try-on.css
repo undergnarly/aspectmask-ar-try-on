@@ -28,18 +28,22 @@ html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background:
 button, a { font: inherit; color: inherit; }
 button { cursor: pointer; }
 
-.try-on { position: relative; width: 100%; height: 100%; min-height: 100dvh; overflow: hidden; background: #08070b; }
+.try-on {
+  position: relative; width: 100%; height: 100%; min-height: 100dvh; overflow: hidden;
+  background: radial-gradient(circle at 50% 38%, #29272c 0%, #0b0a0e 72%);
+}
 .camera-canvas {
-  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-  transform: scaleX(-1); background: radial-gradient(circle at 50% 38%, #29272c 0%, #0b0a0e 72%);
+  position: absolute; z-index: 1; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  transform: scaleX(-1); background: transparent; pointer-events: none;
 }
 #camera-video {
-  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-  opacity: .001; pointer-events: none;
+  position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transform: scaleX(-1); pointer-events: none;
 }
+.try-on.camera-active #camera-video { opacity: 1; }
 
 .try-on::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
+  content: ""; position: absolute; z-index: 2; inset: 0; pointer-events: none;
   background: linear-gradient(180deg, rgba(3,2,8,.48) 0%, transparent 20%, transparent 67%, rgba(3,2,8,.78) 100%);
 }
 

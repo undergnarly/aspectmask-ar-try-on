@@ -22,7 +22,7 @@ const productById = new Map(products.map((product) => [product.id, product]));
 const maskById = new Map(MASKS.map((mask) => [mask.id, mask]));
 
 const canvas = document.getElementById("camera-canvas");
-const ctx = canvas.getContext("2d", { alpha: false });
+const ctx = canvas.getContext("2d", { alpha: true });
 const video = document.getElementById("camera-video");
 const permissionCard = document.getElementById("permission-card");
 const startButton = document.getElementById("start-camera-btn");
@@ -243,6 +243,7 @@ async function startCamera() {
     video.autoplay = true;
     video.muted = true;
     video.playsInline = true;
+    document.getElementById("try-on-app").classList.add("camera-active");
 
     // On some Xiaomi/Android Chrome builds video.play() starts the camera (the
     // green privacy dot appears) but its Promise never resolves. Do not await
@@ -369,7 +370,7 @@ function renderLoop(now) {
   }
 
   sizeCanvasToVideo();
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (!faceLandmarker) {
     animationFrame = requestAnimationFrame(renderLoop);
     return;
@@ -399,6 +400,8 @@ function stopCamera() {
   if (stream) stream.getTracks().forEach((track) => track.stop());
   stream = null;
   video.srcObject = null;
+  document.getElementById("try-on-app").classList.remove("camera-active");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   latestPose = null;
   smoothPose = null;
   captureButton.disabled = true;
@@ -412,6 +415,7 @@ async function capturePhoto() {
   const outputContext = output.getContext("2d");
   outputContext.translate(output.width, 0);
   outputContext.scale(-1, 1);
+  outputContext.drawImage(video, 0, 0, output.width, output.height);
   outputContext.drawImage(canvas, 0, 0);
 
   const blob = await new Promise((resolve) => output.toBlob(resolve, "image/jpeg", .92));

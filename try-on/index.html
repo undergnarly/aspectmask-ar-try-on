@@ -6,12 +6,12 @@
   <meta name="robots" content="noindex" />
   <title>Virtual Try-On — ASPECT</title>
   <link rel="icon" type="image/png" href="/assets/brand/logo.png" />
-  <link rel="stylesheet" href="/css/try-on.css?v=20260808c" />
+  <link rel="stylesheet" href="/css/try-on.css?v=20260808d" />
 </head>
 <body>
   <main class="try-on" id="try-on-app">
     <canvas class="camera-canvas" id="camera-canvas" aria-label="Live camera preview with a virtual mask"></canvas>
-    <video id="camera-video" playsinline muted aria-hidden="true"></video>
+    <video id="camera-video" autoplay playsinline muted disablepictureinpicture aria-hidden="true"></video>
 
     <header class="try-on-header">
       <a class="round-control" id="try-on-close" href="/" aria-label="Close virtual try-on">&#10005;</a>
@@ -51,7 +51,7 @@
     </footer>
   </main>
 
-  <script src="/js/products.js?v=20260808c"></script>
-  <script type="module" src="/js/try-on.js?v=20260808c"></script>
+  <script src="/js/products.js?v=20260808d"></script>
+  <script type="module" src="/js/try-on.js?v=20260808d"></script>
 </body>
 </html>

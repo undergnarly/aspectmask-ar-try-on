@@ -37,12 +37,18 @@ const androidCameraNote = document.getElementById("android-camera-note");
 
 const isAndroid = /Android/i.test(navigator.userAgent);
 const isEmbeddedBrowser = /; wv\)|Instagram|FBAN|FBAV|Telegram/i.test(navigator.userAgent);
+const cameraSessionId = crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+const cameraChannel = typeof BroadcastChannel === "function"
+  ? new BroadcastChannel("aspect-camera-session")
+  : null;
+const CAMERA_REQUEST_KEY = "aspect-camera-request";
 
 if (isAndroid) androidCameraNote.hidden = false;
 
 let faceLandmarker = null;
 let stream = null;
 let animationFrame = 0;
+let cameraRequestId = 0;
 let selectedMask = null;
 let selectedImage = null;
 let lastVideoTime = -1;
@@ -119,7 +125,9 @@ async function requestCamera() {
   // stall while negotiating an ideal resolution before returning a stream.
   const request = navigator.mediaDevices.getUserMedia({
     audio: false,
-    video: { facingMode: { ideal: "user" } },
+    // `video: true` is deliberately used for the first open. A few Android
+    // camera HALs stall while Chrome negotiates facingMode before returning.
+    video: true,
   });
 
   try {
@@ -221,10 +229,21 @@ async function createTracker() {
 
 async function startCamera() {
   let cameraStarted = false;
+  const requestId = ++cameraRequestId;
   startButton.disabled = true;
   startButton.textContent = "starting camera…";
   retryButton.disabled = true;
+  retryButton.dataset.reload = "false";
   errorPanel.hidden = true;
+
+  // Ask any other open try-on tab to release the camera before this tab opens it.
+  const cameraRequest = { type: "request-camera", source: cameraSessionId, at: Date.now() };
+  cameraChannel?.postMessage(cameraRequest);
+  try {
+    localStorage.setItem(CAMERA_REQUEST_KEY, JSON.stringify(cameraRequest));
+  } catch (_error) {
+    // Storage can be disabled in private browsing; BroadcastChannel still works.
+  }
 
   if (!navigator.mediaDevices?.getUserMedia) {
     showError("This browser cannot access the camera. Open the preview in Safari or Chrome over HTTPS.");
@@ -236,6 +255,10 @@ async function startCamera() {
 
   try {
     const cameraStream = await requestCamera();
+    if (requestId !== cameraRequestId || document.hidden) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      return;
+    }
     stream = cameraStream;
     cameraStarted = true;
 
@@ -280,9 +303,11 @@ async function startCamera() {
     if (error?.name === "TrackerTimeoutError") {
       showError("Face tracking could not finish loading. Check your connection, reload the page, and try again.");
     } else if (error?.name === "CameraFrameTimeoutError") {
+      retryButton.dataset.reload = "true";
       showError("The camera opened, but Android did not send video frames. Close other apps using the camera, fully close Chrome, reopen it, and try again.");
     } else if (error?.name === "CameraRequestTimeoutError") {
-      showError("Android did not finish opening the camera. Close other camera apps, reload Chrome, and try again.");
+      retryButton.dataset.reload = "true";
+      showError("Android did not finish opening the camera. Close other try-on tabs, fully close Chrome, reopen it, and try again.");
     } else if (cameraStarted || busy) {
       showError("The camera opened but could not start video. Close other apps using the camera, reload Chrome, and try again.");
     } else {
@@ -395,6 +420,7 @@ function renderLoop(now) {
 }
 
 function stopCamera() {
+  cameraRequestId += 1;
   cancelAnimationFrame(animationFrame);
   animationFrame = 0;
   if (stream) stream.getTracks().forEach((track) => track.stop());
@@ -405,6 +431,15 @@ function stopCamera() {
   latestPose = null;
   smoothPose = null;
   captureButton.disabled = true;
+}
+
+function resetCameraPrompt() {
+  stopCamera();
+  errorPanel.hidden = true;
+  permissionCard.hidden = false;
+  hint.hidden = true;
+  startButton.disabled = false;
+  startButton.textContent = "enable camera";
 }
 
 async function capturePhoto() {
@@ -442,6 +477,34 @@ const requestedMask = new URLSearchParams(location.search).get("mask");
 selectMask(maskById.has(requestedMask) ? requestedMask : MASKS[0].id);
 
 startButton.addEventListener("click", startCamera);
-retryButton.addEventListener("click", startCamera);
+retryButton.addEventListener("click", () => {
+  if (retryButton.dataset.reload === "true") {
+    location.reload();
+  } else {
+    startCamera();
+  }
+});
 captureButton.addEventListener("click", capturePhoto);
-window.addEventListener("pagehide", stopCamera);
+cameraChannel?.addEventListener("message", (event) => {
+  if (event.data?.type === "request-camera" && event.data.source !== cameraSessionId) {
+    resetCameraPrompt();
+  }
+});
+window.addEventListener("storage", (event) => {
+  if (event.key !== CAMERA_REQUEST_KEY || !event.newValue) return;
+  try {
+    const request = JSON.parse(event.newValue);
+    if (request.type === "request-camera" && request.source !== cameraSessionId) {
+      resetCameraPrompt();
+    }
+  } catch (_error) {
+    // Ignore malformed or unrelated storage changes.
+  }
+});
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) resetCameraPrompt();
+});
+window.addEventListener("pagehide", () => {
+  stopCamera();
+  cameraChannel?.close();
+});

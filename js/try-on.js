@@ -23,11 +23,16 @@ const maskById = new Map(MASKS.map((mask) => [mask.id, mask]));
 
 const canvas = document.getElementById("camera-canvas");
 const ctx = canvas.getContext("2d", { alpha: true });
+const app = document.getElementById("try-on-app");
 const video = document.getElementById("camera-video");
+const selfieInput = document.getElementById("selfie-input");
+const selfieCameraButton = document.getElementById("selfie-camera-btn");
+const selfieErrorButton = document.getElementById("selfie-error-btn");
 const permissionCard = document.getElementById("permission-card");
 const startButton = document.getElementById("start-camera-btn");
 const retryButton = document.getElementById("retry-camera-btn");
 const errorPanel = document.getElementById("try-on-error");
+const errorTitle = document.getElementById("try-on-error-title");
 const errorCopy = document.getElementById("try-on-error-copy");
 const hint = document.getElementById("tracking-hint");
 const picker = document.getElementById("mask-picker");
@@ -43,9 +48,15 @@ const cameraChannel = typeof BroadcastChannel === "function"
   : null;
 const CAMERA_REQUEST_KEY = "aspect-camera-request";
 
-if (isAndroid) androidCameraNote.hidden = false;
+if (isAndroid) {
+  androidCameraNote.hidden = false;
+  startButton.textContent = "live camera (beta)";
+  selfieCameraButton.textContent = "open Android camera — recommended";
+}
 
 let faceLandmarker = null;
+let imageLandmarker = null;
+let visionFilesetPromise = null;
 let stream = null;
 let animationFrame = 0;
 let cameraRequestId = 0;
@@ -55,6 +66,9 @@ let lastVideoTime = -1;
 let lastFaceSeenAt = 0;
 let smoothPose = null;
 let latestPose = null;
+let selfieImage = null;
+let selfiePose = null;
+let selfieObjectUrl = null;
 
 function productName(id) {
   return productById.get(id)?.name || id;
@@ -99,13 +113,25 @@ async function selectMask(id) {
   const url = new URL(location.href);
   url.searchParams.set("mask", nextMask.id);
   history.replaceState({}, "", url);
+  if (selfieImage) drawSelfie();
 }
 
 function showError(message) {
   permissionCard.hidden = true;
+  errorTitle.textContent = "Camera unavailable";
   errorCopy.textContent = message;
   errorPanel.hidden = false;
   stopCamera();
+}
+
+function requestOtherTabsToReleaseCamera() {
+  const cameraRequest = { type: "request-camera", source: cameraSessionId, at: Date.now() };
+  cameraChannel?.postMessage(cameraRequest);
+  try {
+    localStorage.setItem(CAMERA_REQUEST_KEY, JSON.stringify(cameraRequest));
+  } catch (_error) {
+    // Storage can be disabled in private browsing; BroadcastChannel still works.
+  }
 }
 
 function withTimeout(promise, milliseconds, errorName, errorMessage) {
@@ -200,18 +226,17 @@ function sizeCanvasToVideo() {
   }
 }
 
-async function createTracker() {
-  if (faceLandmarker) return faceLandmarker;
-  const vision = await FilesetResolver.forVisionTasks(
+async function createLandmarker(runningMode) {
+  visionFilesetPromise ||= FilesetResolver.forVisionTasks(
     "/assets/vendor/mediapipe/wasm"
   );
-
+  const vision = await visionFilesetPromise;
   const options = {
     baseOptions: {
       modelAssetPath: "/assets/vendor/mediapipe/face_landmarker.task",
       delegate: "GPU",
     },
-    runningMode: "VIDEO",
+    runningMode,
     numFaces: 1,
     minFaceDetectionConfidence: .55,
     minFacePresenceConfidence: .55,
@@ -219,16 +244,26 @@ async function createTracker() {
   };
 
   try {
-    faceLandmarker = await FaceLandmarker.createFromOptions(vision, options);
+    return await FaceLandmarker.createFromOptions(vision, options);
   } catch (_gpuError) {
     options.baseOptions.delegate = "CPU";
-    faceLandmarker = await FaceLandmarker.createFromOptions(vision, options);
+    return FaceLandmarker.createFromOptions(vision, options);
   }
+}
+
+async function createTracker() {
+  if (!faceLandmarker) faceLandmarker = await createLandmarker("VIDEO");
   return faceLandmarker;
+}
+
+async function createImageTracker() {
+  if (!imageLandmarker) imageLandmarker = await createLandmarker("IMAGE");
+  return imageLandmarker;
 }
 
 async function startCamera() {
   let cameraStarted = false;
+  stopSelfie();
   const requestId = ++cameraRequestId;
   startButton.disabled = true;
   startButton.textContent = "starting camera…";
@@ -237,13 +272,7 @@ async function startCamera() {
   errorPanel.hidden = true;
 
   // Ask any other open try-on tab to release the camera before this tab opens it.
-  const cameraRequest = { type: "request-camera", source: cameraSessionId, at: Date.now() };
-  cameraChannel?.postMessage(cameraRequest);
-  try {
-    localStorage.setItem(CAMERA_REQUEST_KEY, JSON.stringify(cameraRequest));
-  } catch (_error) {
-    // Storage can be disabled in private browsing; BroadcastChannel still works.
-  }
+  requestOtherTabsToReleaseCamera();
 
   if (!navigator.mediaDevices?.getUserMedia) {
     showError("This browser cannot access the camera. Open the preview in Safari or Chrome over HTTPS.");
@@ -266,7 +295,7 @@ async function startCamera() {
     video.autoplay = true;
     video.muted = true;
     video.playsInline = true;
-    document.getElementById("try-on-app").classList.add("camera-active");
+    app.classList.add("camera-active");
 
     // On some Xiaomi/Android Chrome builds video.play() starts the camera (the
     // green privacy dot appears) but its Promise never resolves. Do not await
@@ -426,15 +455,96 @@ function stopCamera() {
   if (stream) stream.getTracks().forEach((track) => track.stop());
   stream = null;
   video.srcObject = null;
-  document.getElementById("try-on-app").classList.remove("camera-active");
+  app.classList.remove("camera-active");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   latestPose = null;
   smoothPose = null;
   captureButton.disabled = true;
 }
 
+function stopSelfie() {
+  selfieImage = null;
+  selfiePose = null;
+  if (selfieObjectUrl) URL.revokeObjectURL(selfieObjectUrl);
+  selfieObjectUrl = null;
+  app.classList.remove("selfie-active");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function drawSelfie() {
+  if (!selfieImage) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(selfieImage, 0, 0, canvas.width, canvas.height);
+  drawMask(selfiePose);
+}
+
+function openSelfieCamera() {
+  requestOtherTabsToReleaseCamera();
+  stopCamera();
+  selfieInput.click();
+}
+
+async function loadSelfie(file) {
+  if (!file) return;
+  stopCamera();
+  stopSelfie();
+  errorPanel.hidden = true;
+  permissionCard.hidden = true;
+  hint.textContent = "Preparing your selfie…";
+  hint.hidden = false;
+  captureButton.disabled = true;
+
+  const objectUrl = URL.createObjectURL(file);
+  selfieObjectUrl = objectUrl;
+  const image = new Image();
+  image.decoding = "async";
+  image.src = objectUrl;
+
+  try {
+    await image.decode();
+    selfieImage = image;
+    app.classList.add("selfie-active");
+    const scale = Math.min(1, 1280 / Math.max(image.naturalWidth, image.naturalHeight));
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    drawSelfie();
+
+    hint.textContent = "Finding your face…";
+    const tracker = await withTimeout(
+      createImageTracker(),
+      TRACKER_TIMEOUT_MS,
+      "TrackerTimeoutError",
+      "Photo face tracker loading timed out"
+    );
+    const result = tracker.detect(canvas);
+    const landmarks = result.faceLandmarks?.[0];
+    smoothPose = null;
+    selfiePose = landmarks ? poseFromLandmarks(landmarks) : null;
+    drawSelfie();
+
+    if (!selfiePose) {
+      errorTitle.textContent = "No face found";
+      errorCopy.textContent = "Take a front-facing selfie in good light, with your whole face inside the frame.";
+      errorPanel.hidden = false;
+      hint.hidden = true;
+      return;
+    }
+
+    captureButton.disabled = false;
+    hint.hidden = true;
+  } catch (_error) {
+    errorTitle.textContent = "Photo try-on unavailable";
+    errorCopy.textContent = "We could not process this photo. Take another front-facing selfie and try again.";
+    errorPanel.hidden = false;
+    hint.hidden = true;
+  } finally {
+    selfieInput.value = "";
+  }
+}
+
 function resetCameraPrompt() {
   stopCamera();
+  stopSelfie();
   errorPanel.hidden = true;
   permissionCard.hidden = false;
   hint.hidden = true;
@@ -443,15 +553,19 @@ function resetCameraPrompt() {
 }
 
 async function capturePhoto() {
-  if (!stream) return;
+  if (!stream && !selfieImage) return;
   const output = document.createElement("canvas");
   output.width = canvas.width;
   output.height = canvas.height;
   const outputContext = output.getContext("2d");
-  outputContext.translate(output.width, 0);
-  outputContext.scale(-1, 1);
-  outputContext.drawImage(video, 0, 0, output.width, output.height);
-  outputContext.drawImage(canvas, 0, 0);
+  if (selfieImage) {
+    outputContext.drawImage(canvas, 0, 0);
+  } else {
+    outputContext.translate(output.width, 0);
+    outputContext.scale(-1, 1);
+    outputContext.drawImage(video, 0, 0, output.width, output.height);
+    outputContext.drawImage(canvas, 0, 0);
+  }
 
   const blob = await new Promise((resolve) => output.toBlob(resolve, "image/jpeg", .92));
   if (!blob) return;
@@ -477,6 +591,9 @@ const requestedMask = new URLSearchParams(location.search).get("mask");
 selectMask(maskById.has(requestedMask) ? requestedMask : MASKS[0].id);
 
 startButton.addEventListener("click", startCamera);
+selfieCameraButton.addEventListener("click", openSelfieCamera);
+selfieErrorButton.addEventListener("click", openSelfieCamera);
+selfieInput.addEventListener("change", () => loadSelfie(selfieInput.files?.[0]));
 retryButton.addEventListener("click", () => {
   if (retryButton.dataset.reload === "true") {
     location.reload();

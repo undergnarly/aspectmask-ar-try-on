@@ -6,12 +6,13 @@
   <meta name="robots" content="noindex" />
   <title>Virtual Try-On — ASPECT</title>
   <link rel="icon" type="image/png" href="/assets/brand/logo.png" />
-  <link rel="stylesheet" href="/css/try-on.css?v=20260808e" />
+  <link rel="stylesheet" href="/css/try-on.css?v=20260808f" />
 </head>
 <body>
   <main class="try-on" id="try-on-app">
     <canvas class="camera-canvas" id="camera-canvas" aria-label="Live camera preview with a virtual mask"></canvas>
     <video id="camera-video" autoplay playsinline muted disablepictureinpicture aria-hidden="true"></video>
+    <input id="selfie-input" type="file" accept="image/*" capture="user" hidden />
 
     <header class="try-on-header">
       <a class="round-control" id="try-on-close" href="/" aria-label="Close virtual try-on">&#10005;</a>
@@ -31,13 +32,15 @@
         Android: close other camera apps and floating bubbles before enabling the camera.
       </p>
       <button class="start-camera-btn" id="start-camera-btn" type="button">enable camera</button>
+      <button class="secondary-camera-btn" id="selfie-camera-btn" type="button">take a selfie instead</button>
       <p class="permission-note">Best in portrait mode, facing a window.</p>
     </section>
 
     <section class="try-on-error" id="try-on-error" hidden>
-      <h2>Camera unavailable</h2>
+      <h2 id="try-on-error-title">Camera unavailable</h2>
       <p id="try-on-error-copy">Check camera permission in your browser and try again.</p>
-      <button id="retry-camera-btn" type="button">try again</button>
+      <button id="selfie-error-btn" type="button">open Android camera</button>
+      <button class="secondary-camera-btn" id="retry-camera-btn" type="button">retry live camera</button>
       <a href="/">return to the collection</a>
     </section>
 
@@ -51,7 +54,7 @@
     </footer>
   </main>
 
-  <script src="/js/products.js?v=20260808e"></script>
-  <script type="module" src="/js/try-on.js?v=20260808e"></script>
+  <script src="/js/products.js?v=20260808f"></script>
+  <script type="module" src="/js/try-on.js?v=20260808f"></script>
 </body>
 </html>

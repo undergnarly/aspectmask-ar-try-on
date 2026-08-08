@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex" />
+  <title>Virtual Try-On — ASPECT</title>
+  <link rel="icon" type="image/png" href="/assets/brand/logo.png" />
+  <link rel="stylesheet" href="/css/try-on.css?v=20260808b" />
+</head>
+<body>
+  <main class="try-on" id="try-on-app">
+    <canvas class="camera-canvas" id="camera-canvas" aria-label="Live camera preview with a virtual mask"></canvas>
+    <video id="camera-video" playsinline muted aria-hidden="true"></video>
+
+    <header class="try-on-header">
+      <a class="round-control" id="try-on-close" href="/" aria-label="Close virtual try-on">&#10005;</a>
+      <img class="try-on-logo" src="/assets/brand/logo.png" alt="ASPECT" />
+      <button class="round-control" id="capture-btn" type="button" aria-label="Take a photo" disabled>
+        <span class="capture-icon" aria-hidden="true"></span>
+      </button>
+    </header>
+
+    <div class="tracking-hint" id="tracking-hint" hidden>Move into the frame and look straight ahead</div>
+
+    <section class="permission-card" id="permission-card">
+      <p class="eyebrow">Camera try-on · beta</p>
+      <h1>Meet your other self.</h1>
+      <p class="permission-copy">Your camera stays on this device. Nothing is uploaded or saved by ASPECT.</p>
+      <p class="android-camera-note" id="android-camera-note" hidden>
+        Android: open this page in Chrome and close floating bubbles or Quick Ball before enabling the camera.
+      </p>
+      <button class="start-camera-btn" id="start-camera-btn" type="button">enable camera</button>
+      <p class="permission-note">Best in portrait mode, facing a window.</p>
+    </section>
+
+    <section class="try-on-error" id="try-on-error" hidden>
+      <h2>Camera unavailable</h2>
+      <p id="try-on-error-copy">Check camera permission in your browser and try again.</p>
+      <button id="retry-camera-btn" type="button">try again</button>
+      <a href="/">return to the collection</a>
+    </section>
+
+    <footer class="mask-dock" id="mask-dock" aria-label="Choose a mask">
+      <div class="mask-name-row">
+        <p id="selected-mask-name">Ruby Dune Mask</p>
+        <span>2D preview</span>
+      </div>
+      <div class="mask-picker" id="mask-picker"></div>
+      <p class="prototype-note">Front-view prototype. Turn slowly for the best fit.</p>
+    </footer>
+  </main>
+
+  <script src="/js/products.js?v=20260808b"></script>
+  <script type="module" src="/js/try-on.js?v=20260808b"></script>
+</body>
+</html>

@@ -1,0 +1,497 @@
+/* =========================================================================
+   ASPECT — stylesheet
+   -------------------------------------------------------------------------
+   BRAND ASSETS: real brand kit loaded from Google Drive on 2026-07-20 —
+   Gilroy (Regular/Medium/Heavy, self-hosted woff2) + the official palette:
+     #030208 near-black · #591B20 wine/burgundy · #798582 sage · #E9EEF2 ivory
+   Logo: assets/brand/logo.png (black artwork on transparent bg — displayed
+   inverted to white via CSS `filter: invert(1)` since the site is dark).
+   ========================================================================= */
+
+@font-face {
+  font-family: "Gilroy";
+  src: url("../assets/brand/fonts/Gilroy-Heavy.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Gilroy";
+  src: url("../assets/brand/fonts/Gilroy-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Gilroy";
+  src: url("../assets/brand/fonts/Gilroy-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  --bg: #030208;
+  --bg-card: #111016;
+  --fg: #e9eef2;
+  --muted: #798582;
+  --accent: #591b20;       /* brand wine/burgundy — use for fills, buttons, borders */
+  --accent-text: #a88f94;  /* burgundy lightened for legible small text/labels on black */
+  --accent-bright: #9c2e3a; /* brand wine/burgundy, brightened — for the one high-stakes "order" button only */
+  --line: #232329;
+  --radius: 2px;
+  --font-display: "Gilroy", "Poppins", sans-serif;
+  --font-body: "Gilroy", "Inter", sans-serif;
+  --maxw: 560px; /* mobile-first single column max width, feels good on desktop too */
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+img, video { display: block; max-width: 100%; }
+button { font-family: inherit; cursor: pointer; }
+
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+
+/* ---------- header ---------- */
+.site-header {
+  position: sticky; top: 0; z-index: 20;
+  background: rgba(10,10,10,0.9);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.header-inner { display: flex; align-items: center; justify-content: space-between; height: 56px; }
+.logo { height: 20px; width: auto; filter: invert(1); } /* source artwork is black-on-transparent; inverted to show white on our dark bg */
+.header-ig {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  border: 1px solid var(--line); padding: 7px 12px; border-radius: var(--radius);
+  color: var(--fg);
+}
+.header-ig:active { border-color: var(--accent-text); }
+
+/* ---------- hero photo banner ---------- */
+/* Photo banner with title/subtitle overlaid at the bottom over a gradient
+   scrim — matches Lena's Figma mockup 2026-07-27. */
+.hero-photo-banner {
+  position: relative;
+  width: 100%;
+  max-width: 900px; /* keeps the banner from ballooning in height on wide desktop windows — mobile is the real target */
+  margin: 0 auto;
+  aspect-ratio: 9 / 10; /* ~half of a standard mobile screen height (390x844) — crops top/bottom of hero-banner.jpg symmetrically via object-fit:cover below, no stretching/distortion */
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+.hero-photo-img-slot { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.hero-photo-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero-photo-placeholder-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted);
+}
+/* Gradient scrim — guarantees the white overlay text stays readable no
+   matter what's in that part of the photo, even if the crop changes later. */
+.hero-photo-scrim {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 55%;
+  background: linear-gradient(to bottom, rgba(3,2,8,0) 0%, rgba(3,2,8,0.75) 65%, rgba(3,2,8,0.92) 100%);
+  pointer-events: none;
+}
+.hero-photo-overlay-text {
+  position: absolute; left: 20px; right: 20px; bottom: 24px;
+  text-align: center;
+}
+/* font-weight 400 (thin, same as .card-name) — per Lena 2026-07-29: the hero
+   headline over the photo was too loud/shouty at the default h1 bold (700).
+   font-size left untouched, only the weight changed. */
+.hero-photo-overlay-text h1 { font-size: 38px; font-weight: 400; line-height: 1.1; margin-bottom: 8px; color: var(--fg); }
+.hero-photo-overlay-text .hero-sub { color: var(--muted); font-size: 15.5px; line-height: 1.4; margin-bottom: 0; }
+
+/* ---------- hero ---------- */
+/* bottom padding trimmed 2026-07-27 per Lena — catalog cards should follow
+   right after the "Only 6 pieces exist now:" heading, not after a big gap. */
+.hero { padding: 28px 0 18px; text-align: left; }
+
+.hero-wear-for-heading {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  color: rgba(233, 238, 242, 0.68); margin-bottom: 12px; /* neutral, not accent-tinted — matches Lena's mockup */
+}
+/* 2-column grid, approved via Lena's Figma mockup 2026-07-27 — bigger than
+   body text on purpose (16px vs ~14.5-15.5px elsewhere) for readability at
+   this more compact layout. */
+.hero-wear-for-list {
+  display: grid; grid-template-columns: 1fr 1fr;
+  column-gap: 14px; row-gap: 14px; margin-bottom: 30px;
+}
+.hero-wear-for-list li {
+  font-size: 16px; line-height: 1.35; color: var(--fg);
+  display: flex; gap: 6px; align-items: flex-start;
+}
+.hero-wear-for-list li::before { content: "—"; color: var(--accent-text); flex: none; }
+
+/* 3rd tier — quiet descriptor paragraph, plain text (2026-07-27: "Fashion
+   avant-garde masks" moved back into this block as its first line — no
+   longer its own heading, per Lena's swap: the emphasis moves to "Only 6
+   pieces" below instead). */
+.hero-tagline-lines {
+  color: var(--muted); font-size: 13.5px; line-height: 1.6;
+  text-align: center; margin-bottom: 34px;
+}
+.hero-tagline-lines p { margin: 0 0 2px; }
+
+/* Scarcity callout — the emphasized heading of this section (Gilroy
+   Medium, well below the photo's H1 weight/size). No subtitle under it
+   anymore — removed 2026-07-27 per Lena, the line now says it all on its
+   own ("Only 6 pieces exist now:"). */
+.hero-scarcity-number {
+  font-family: var(--font-display); font-weight: 500; text-align: center;
+  font-size: 21px; line-height: 1.25; color: var(--fg);
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 14px 22px; font-size: 13.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  border-radius: var(--radius); border: 1px solid transparent; transition: opacity .15s ease;
+}
+.btn:active { opacity: 0.7; }
+.btn-primary { background: var(--accent); color: var(--fg); }
+.btn-ghost { background: transparent; color: var(--fg); border-color: var(--line); }
+.btn-block { display: flex; width: 100%; margin-top: 10px; }
+
+/* ---------- catalog section ---------- */
+/* No divider/border and minimal top padding 2026-07-27 per Lena — cards
+   should follow immediately after the "Only 6 pieces exist now:" heading,
+   not sit behind a section break. */
+.catalog { padding: 10px 0 60px; }
+
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+/* flex column + height:100% (2026-07-27) — grid rows already stretch items
+   to equal height, but content (product name length, etc.) varied inside,
+   so the "View piece" buttons landed at different heights per card. Flex
+   column here + margin-top:auto on .card-btn pins the button to the
+   bottom of every card, regardless of how much text is above it. */
+.card {
+  background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--radius);
+  overflow: hidden; cursor: pointer; -webkit-tap-highlight-color: rgba(233,238,242,0.15);
+  display: flex; flex-direction: column; height: 100%;
+}
+.card-media { position: relative; width: 100%; aspect-ratio: 3/4; overflow: hidden; }
+.card-media img { width: 100%; height: 100%; object-fit: cover; }
+.card-badge {
+  position: absolute; top: 8px; left: 8px; background: rgba(10,10,10,0.75);
+  color: var(--accent-text); font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 4px 7px; border-radius: 2px; border: 1px solid var(--line);
+}
+.card-info { padding: 12px 12px 14px; display: flex; flex-direction: column; flex: 1; }
+/* Tagline removed from the grid preview 2026-07-27 per Lena (still shown in
+   the product modal, just not on the card thumbnail) — name sits right on
+   top of price now, tight gap (no reserved 2-line space anymore: all 6
+   current names fit on one line, and the button still pins to the bottom
+   of each card via flex + margin-top:auto, so a future longer name that
+   wraps to 2 lines won't break alignment within its own row). */
+.card-name { font-family: var(--font-display); font-weight: 400; font-size: 14px; line-height: 1.3; margin-bottom: 4px; min-height: 18px; }
+/* font-weight 400 — our Gilroy has only Regular(400)/Medium(500)/Heavy(700)
+   loaded, no lighter "thin" cut exists, so Regular is as light as this can
+   get without adding a new font file. */
+.card-price { font-size: 13px; font-weight: 400; color: var(--accent-text); margin-bottom: 8px; }
+/* Outline only, no fill — 2026-07-27 per Lena: a solid white button was
+   pulling too much attention off the product photo itself; the whole card
+   is already tappable, so the button just needs to read clearly, not shout. */
+.card-btn {
+  width: 100%; text-align: center; font-size: 11px; padding: 10px;
+  border: 1px solid var(--fg); background: transparent; color: var(--fg);
+  border-radius: var(--radius); font-weight: 500; letter-spacing: 0.06em; text-transform: none;
+  margin-top: auto;
+}
+
+/* ---------- media placeholder (used when a photo/video file is missing) ---------- */
+.placeholder-slide {
+  width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; text-align: center; padding: 20px;
+  background: repeating-linear-gradient(135deg, #141414, #141414 10px, #181818 10px, #181818 20px);
+  border: 1px dashed var(--line); color: var(--muted); font-size: 11.5px;
+}
+.placeholder-slide .ph-icon { font-size: 22px; opacity: 0.5; }
+.placeholder-slide .ph-label { font-weight: 600; color: var(--fg); font-size: 12px; }
+
+/* ---------- text slide: top-half photo crop (dimmed) + graphite panel with logo + bullets ----------
+   Redesigned 2026-07-28 per Lena's new Figma mockup (node 21:3) — heading + subheading dropped
+   entirely, photo grows from 33% to ~54% of the slide, and the "aspect" watermark moves down to
+   sit in the gap between the photo and the bullets instead of straddling the photo edge. Bullets
+   themselves are unchanged (same copy, same type scale). */
+.text-slide {
+  position: relative; width: 100%; height: 100%; display: flex; flex-direction: column;
+  background: var(--bg-card); /* graphite black from the palette */
+  overflow: hidden;
+}
+.text-slide-photo { position: relative; width: 100%; height: 53.7%; flex-shrink: 0; overflow: hidden; }
+.text-slide-photo img {
+  /* object-position / transform-origin are set inline per-product (js/app.js, `focusY` field
+     on the text-slide item in products.js) — the eye-position crop point differs per photo.
+     scale(1.81) stays fixed for every product — do not change it. Fallback values below only
+     apply if a product's text-slide item somehow has no inline style. */
+  display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 41%;
+  transform: scale(1.81); transform-origin: center 41%;
+}
+.text-slide-photo-scrim { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(3,2,8,0.45); }
+
+/* brand watermark — low-opacity "aspect" mark. Repositioned 2026-07-28 to sit right below the
+   (now taller) photo, right-of-center — same right-of-center placement Lena's original Canva
+   mockup used, just recalibrated for the new photo height. Absolutely positioned against
+   .text-slide, out of normal flow. Same position/size for every product — only the background
+   photo behind it changes. */
+.text-slide .text-slide-watermark {
+  position: absolute; z-index: 3; pointer-events: none;
+  top: 294px; right: 65px; width: 97px; height: auto; opacity: 0.3; object-fit: contain;
+}
+
+.text-slide-content {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  padding: 89px 18px 8px; /* 89px clears the photo + watermark above (out-of-flow), tight per Figma */
+}
+/* bullets: quietest tier, muted color — now the only content in this panel (heading/subheading
+   removed 2026-07-28). Copy/type scale unchanged. */
+.text-slide-bullets {
+  margin: 0 auto; width: 340px; list-style: none; padding: 0;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.text-slide-bullets li {
+  font-size: 14px; line-height: 1.45; color: var(--muted); padding-left: 16px; position: relative;
+}
+.text-slide-bullets li::before { content: "—"; position: absolute; left: 0; color: var(--accent-text); }
+
+/* ---------- fit slide: full-bleed on-mannequin photo + objection-handling bullets overlaid
+   at the bottom (fit / comfort / travel). Added 2026-08-08, now slide 2 — replaces the old
+   hero-video slot. Designed + approved in sandbox on Ruby Dune, see
+   slide2-fit-slide-template-spec.md (Claude Project doc) for the full design rationale and
+   per-product photo calibration table. Same bullet copy on every product. ---------- */
+.fit-slide { position: relative; width: 100%; height: 100%; overflow: hidden; background: #000; }
+.fit-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fit-slide-scrim {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 46%;
+  background: linear-gradient(180deg, rgba(3,2,8,0) 0%, rgba(3,2,8,0.72) 30%, rgba(3,2,8,0.93) 65%, rgba(3,2,8,0.96) 100%);
+}
+.fit-slide-content { position: absolute; left: 0; right: 0; bottom: 34px; padding: 0 22px; }
+/* width:fit-content shrinks the bullet block to its widest line instead of a fixed box — that's
+   what makes the paragraph read as centered on the slide while the hanging-indent dashes (the
+   li::before below) stay aligned in one column within it. text-align:center on the <li> itself
+   was tried and rejected — it made every dash drift with its own line's text width. */
+.fit-slide-bullets {
+  margin: 0 auto; width: fit-content; max-width: 300px; list-style: none; padding: 0;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.fit-slide-bullets li {
+  font-size: 17px; line-height: 1.3; color: #efefef;
+  padding-left: 18px; position: relative; text-align: left; white-space: nowrap;
+}
+.fit-slide-bullets li::before { content: "—"; position: absolute; left: 0; color: var(--accent-text); }
+/* lead phrase (before the colon) at full opacity to catch the eye first; the rest of the line
+   is dimmed so it reads as supporting detail rather than competing for attention. */
+.fit-slide-bullets .fit-strong { opacity: 1; }
+.fit-slide-bullets .fit-dim { opacity: .55; }
+
+/* ---------- proof slide: full-bleed process photo + short proof-of-craft text, sits right after
+   the text slide (added 2026-07-28 per Lena's Figma mockup, node 21:26). Same text on every
+   product — only the background photo changes (a photo of the piece actually being made). ---------- */
+.proof-slide { position: relative; width: 100%; height: 100%; overflow: hidden; }
+.proof-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.proof-slide-scrim { position: absolute; inset: 0; background: rgba(3,2,8,0.6); } /* 2026-07-28: bumped from 0.45 — proof photos are much brighter than text-slide's, same 0.45 read as barely-there */
+.proof-slide-content { position: absolute; left: 0; right: 0; top: 66%; padding: 0 25px 0 60px; } /* 2026-07-28: raised to align with top edge of bottom third (was bottom:0), left padding widened 25px -> 60px per Lena's second round (44px still felt tight) */
+.proof-slide-heading {
+  font-family: var(--font-display); font-weight: 500; font-size: 25px; letter-spacing: 0.03em;
+  text-transform: uppercase; color: var(--fg); text-align: left; margin: 0 0 12px;
+}
+.proof-slide-body p { font-size: 15px; line-height: 21px; color: #efefef; margin: 0; text-align: left; } /* brightened per Lena's Figma update 2026-07-28 — was var(--muted) */
+
+/* ---------- cta slide (hero photo + overlay copy, final carousel slide) ---------- */
+.cta-slide { position: relative; width: 100%; height: 100%; }
+.cta-slide img { width: 100%; height: 100%; object-fit: cover; }
+.cta-slide-overlay {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 33%;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 18px; box-sizing: border-box;
+  background: linear-gradient(180deg, rgba(3,2,8,0) 0%, rgba(3,2,8,0.78) 25%, rgba(3,2,8,0.94) 60%, rgba(3,2,8,0.96) 100%);
+}
+.cta-slide-title {
+  font-family: var(--font-display); font-weight: 400; font-size: 38px; line-height: 1.05;
+  color: var(--fg); margin-bottom: 10px; width: 100%; text-align: center;
+} /* not bold — same weight as the product name, per Lena 2026-07-28 (was 700) */
+.cta-slide-sub {
+  font-family: var(--font-body); font-size: 19.5px; line-height: 1.3; color: var(--accent-text);
+  font-weight: 400; text-align: center;
+}
+
+/* ---------- footer ---------- */
+.site-footer { border-top: 1px solid var(--line); padding: 34px 0 46px; text-align: center; }
+.footer-brand { height: 30px; width: auto; margin: 0 auto 10px; filter: invert(1); }
+.footer-line { color: var(--muted); font-size: 12.5px; margin-bottom: 10px; }
+.footer-ig { display: inline-block; font-size: 12.5px; color: var(--accent-text); font-weight: 600; }
+
+/* ---------- modal (product detail) ---------- */
+.modal {
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 50; background: var(--bg);
+  display: none; overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+.modal.open { display: block; }
+.modal-inner { max-width: var(--maxw); margin: 0 auto; position: relative; min-height: 100%; }
+
+.modal-close {
+  position: absolute; top: 14px; right: 14px; z-index: 5;
+  width: 34px; height: 34px; border-radius: 50%; border: none;
+  background: rgba(10,10,10,0.65); color: var(--fg); font-size: 15px;
+}
+
+.carousel-wrap { position: relative; }
+.carousel {
+  display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+  aspect-ratio: 3/4; scrollbar-width: none;
+}
+.carousel::-webkit-scrollbar { display: none; }
+.carousel-slide { flex: 0 0 100%; scroll-snap-align: start; width: 100%; height: 100%; }
+
+/* prev/next arrows — mainly for mouse/desktop use, swipe still works on touch */
+.carousel-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 4;
+  width: 36px; height: 36px; border-radius: 50%; border: none;
+  background: rgba(3,2,8,0.55); color: var(--fg); font-size: 20px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.carousel-arrow-prev { left: 10px; }
+.carousel-arrow-next { right: 10px; }
+.carousel-arrow:active { opacity: 0.7; }
+.carousel-slide img, .carousel-slide video { width: 100%; height: 100%; object-fit: cover; }
+
+.carousel-dots { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; padding: 14px 20px; cursor: pointer; }
+.carousel-dots span { display: block; width: 6px; height: 6px; border-radius: 50%; background: rgba(233,238,242,0.3); }
+.carousel-dots span.active { background: var(--accent-text); }
+
+.modal-body { padding: 4px 20px 40px; }
+
+/* level 1 of attention: price + the order button, same row */
+.price-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.modal-price { font-family: var(--font-display); font-size: 32px; font-weight: 400; color: var(--fg); letter-spacing: 0.035em; }
+.btn-order {
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 46%; text-align: center;
+  padding: 13px 10px; font-size: 11px; font-weight: 400; letter-spacing: 0.02em; text-transform: none;
+  border-radius: var(--radius); border: none; background: var(--accent-bright); color: #fff; line-height: 1.3;
+  transition: opacity .15s ease;
+} /* not bold, not caps — per Lena 2026-07-28 (was font-weight:700, text-transform:uppercase) */
+.btn-order:active { opacity: 0.75; }
+
+/* Camera try-on entry point. Kept visually separate from the purchase CTA:
+   this is an experimental product tool, not the primary conversion action. */
+.btn-try-on {
+  width: 100%; margin: -4px 0 20px; padding: 13px 16px; gap: 9px;
+  border: 1px solid rgba(233,238,242,.32); background: rgba(233,238,242,.055);
+  color: var(--fg); font-size: 11px; font-weight: 500; letter-spacing: .045em;
+  text-transform: none;
+}
+.btn-try-on:active { background: rgba(233,238,242,.1); }
+.try-on-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto;
+  background: #8fa69f; box-shadow: 0 0 0 4px rgba(143,166,159,.13);
+}
+.try-on-beta {
+  margin-left: 2px; padding: 2px 5px; border: 1px solid var(--line);
+  color: var(--accent-text); font-size: 8px; line-height: 1; letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+/* level 2: product name */
+.modal-body h3 { font-size: 21px; font-weight: 400; margin-bottom: 4px; }
+.modal-tagline { color: var(--muted); font-size: 13.5px; margin-bottom: 10px; }
+
+/* plain-text line about shipping, right after name/tagline — pre-empts the #1 cross-border objection
+   before the buyer reaches the trust bullets */
+.shipping-line { color: var(--fg); font-size: 13px; line-height: 1.5; margin-bottom: 20px; }
+
+.trust-list { display: flex; flex-direction: column; gap: 9px; margin-bottom: 0; }
+
+/* noticeable but deliberately quieter than the price/order row above — a bordered
+   card with an icon, not a bright color, so it doesn't compete with level 1 */
+.question-line {
+  margin-top: 22px; display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-card);
+  font-size: 14.5px; color: var(--fg);
+}
+.question-line .chat-icon { width: 21px; height: 21px; flex-shrink: 0; color: var(--accent-text); }
+.question-line a { color: var(--accent-text); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.trust-list li {
+  font-size: 13px; color: var(--fg); padding-left: 16px; position: relative; line-height: 1.4;
+}
+.trust-list li::before { content: "—"; position: absolute; left: 0; color: var(--accent-text); }
+
+/* occasion list — added 2026-07-28 per Lena, sits after the trust bullets and before the
+   "Have a question?" block. Same text on every product, static markup (not per-product data). */
+.modal-occasions-heading {
+  font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+  color: rgba(233, 238, 242, 0.68); margin: 22px 0 12px;
+}
+.modal-occasions-list {
+  display: grid; grid-template-columns: 1fr 1fr;
+  column-gap: 14px; row-gap: 10px; margin: 0; padding: 0; list-style: none;
+}
+.modal-occasions-list li {
+  font-size: 13px; line-height: 1.4; color: var(--fg); padding-left: 16px; position: relative;
+}
+.modal-occasions-list li::before { content: "—"; position: absolute; left: 0; color: var(--accent-text); }
+
+/* ---------- order popup: lightweight bottom sheet, not a full-screen takeover ----------
+   dimmed backdrop over the product card behind it; tap the backdrop or ✕ to dismiss */
+.modal-order {
+  background: rgba(3,2,8,0.72);
+  align-items: flex-end; justify-content: center;
+}
+.modal-order.open { display: flex; }
+.modal-order .modal-inner {
+  min-height: 0; max-height: 85vh; width: 100%; overflow-y: auto;
+  background: var(--bg); border-radius: 20px 20px 0 0;
+  animation: sheet-up .22s ease-out;
+}
+@keyframes sheet-up { from { transform: translateY(18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.sheet-grabber { width: 36px; height: 4px; border-radius: 2px; background: var(--line); margin: 10px auto 0; }
+.modal-order .modal-close { top: 12px; }
+
+.modal-order .modal-inner-small { padding: 10px 20px 30px; }
+.modal-order h3 { font-size: 19px; font-weight: 700; margin: 20px 0 12px; text-align: center; }
+
+/* level 1 of attention is the headline above (bold); the two step buttons stay in caps
+   (matches the site's button convention) but drop the bold weight so they read as
+   clear, tappable controls rather than a second headline competing for attention */
+.modal-order .btn { font-weight: 500; }
+
+.copy-hint {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 12px; color: var(--accent-text); font-weight: 700;
+  opacity: 0; transition: opacity .2s ease; margin-bottom: 14px;
+}
+.copy-hint.show { opacity: 1; }
+
+.order-explainer { font-size: 13.5px; line-height: 1.55; color: var(--muted); text-align: center; margin-bottom: 22px; }
+
+/* two explicit, numbered steps — copy the link, then send it — nothing happens silently in the background */
+.order-step { display: flex; align-items: center; gap: 10px; }
+.order-step + .copy-hint { margin-left: 34px; margin-top: -6px; justify-content: flex-start; }
+.order-step-num {
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--accent-text); color: var(--bg); font-size: 12px; font-weight: 700;
+}
+.order-step .btn-block { margin-top: 0; }
+
+.sr-copy-field { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* ---------- small screens polish ---------- */
+@media (min-width: 480px) {
+  .hero h1 { font-size: 38px; }
+}
+
+/* Respect safe areas on iOS */
+.site-header, .site-footer { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }

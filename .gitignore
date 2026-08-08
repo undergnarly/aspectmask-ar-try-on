@@ -1,0 +1,5 @@
+.netlify/
+*.log
+scripts/__pycache__/
+tmp/
+

@@ -1,0 +1,10 @@
+.git/
+.github/
+.netlify/
+scripts/
+tmp/
+*.log
+README.md
+CNAME
+text-slide-preview.html
+

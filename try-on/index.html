@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex" />
   <title>Virtual Try-On — ASPECT</title>
   <link rel="icon" type="image/png" href="/assets/brand/logo.png" />
-  <link rel="stylesheet" href="/css/try-on.css?v=20260808f" />
+  <link rel="stylesheet" href="/css/try-on.css?v=20260810a" />
 </head>
 <body>
   <main class="try-on" id="try-on-app">
@@ -50,11 +50,36 @@
         <span>2D preview</span>
       </div>
       <div class="mask-picker" id="mask-picker"></div>
+      <button class="fit-toggle" id="fit-toggle" type="button" aria-expanded="false">adjust mask fit</button>
+      <section class="fit-panel" id="fit-panel" aria-label="Adjust mask fit" hidden>
+        <label class="fit-control" for="fit-scale">
+          <span>size</span>
+          <output id="fit-scale-value" for="fit-scale">100%</output>
+          <input id="fit-scale" type="range" min="70" max="160" step="1" value="100" />
+        </label>
+        <label class="fit-control" for="fit-x">
+          <span>left / right</span>
+          <output id="fit-x-value" for="fit-x">0</output>
+          <input id="fit-x" type="range" min="-40" max="40" step="1" value="0" />
+        </label>
+        <label class="fit-control" for="fit-y">
+          <span>up / down</span>
+          <output id="fit-y-value" for="fit-y">0</output>
+          <input id="fit-y" type="range" min="-40" max="40" step="1" value="0" />
+        </label>
+        <p class="fit-values" id="fit-values">scale ×1.00 · x 0.00 · y 0.00</p>
+        <div class="fit-actions">
+          <button id="fit-save" type="button">save this mask</button>
+          <button id="fit-reset" type="button">reset</button>
+          <button id="fit-copy" type="button">copy all values</button>
+        </div>
+        <p class="fit-status" id="fit-status" aria-live="polite"></p>
+      </section>
       <p class="prototype-note">Front-view prototype. Turn slowly for the best fit.</p>
     </footer>
   </main>
 
-  <script src="/js/products.js?v=20260808f"></script>
-  <script type="module" src="/js/try-on.js?v=20260808f"></script>
+  <script src="/js/products.js?v=20260810a"></script>
+  <script type="module" src="/js/try-on.js?v=20260810a"></script>
 </body>
 </html>

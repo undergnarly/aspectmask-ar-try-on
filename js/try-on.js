@@ -39,6 +39,19 @@ const picker = document.getElementById("mask-picker");
 const selectedName = document.getElementById("selected-mask-name");
 const captureButton = document.getElementById("capture-btn");
 const androidCameraNote = document.getElementById("android-camera-note");
+const fitToggle = document.getElementById("fit-toggle");
+const fitPanel = document.getElementById("fit-panel");
+const fitScaleInput = document.getElementById("fit-scale");
+const fitXInput = document.getElementById("fit-x");
+const fitYInput = document.getElementById("fit-y");
+const fitScaleValue = document.getElementById("fit-scale-value");
+const fitXValue = document.getElementById("fit-x-value");
+const fitYValue = document.getElementById("fit-y-value");
+const fitValues = document.getElementById("fit-values");
+const fitSaveButton = document.getElementById("fit-save");
+const fitResetButton = document.getElementById("fit-reset");
+const fitCopyButton = document.getElementById("fit-copy");
+const fitStatus = document.getElementById("fit-status");
 
 const isAndroid = /Android/i.test(navigator.userAgent);
 const isEmbeddedBrowser = /; wv\)|Instagram|FBAN|FBAV|Telegram/i.test(navigator.userAgent);
@@ -47,6 +60,7 @@ const cameraChannel = typeof BroadcastChannel === "function"
   ? new BroadcastChannel("aspect-camera-session")
   : null;
 const CAMERA_REQUEST_KEY = "aspect-camera-request";
+const FIT_STORAGE_KEY = "aspect-mask-fits-v1";
 
 if (isAndroid) {
   androidCameraNote.hidden = false;
@@ -69,6 +83,106 @@ let latestPose = null;
 let selfieImage = null;
 let selfiePose = null;
 let selfieObjectUrl = null;
+let savedFits = loadSavedFits();
+const workingFits = {};
+
+function normalizeFit(value) {
+  return {
+    scale: Number.isFinite(Number(value?.scale)) ? Number(value.scale) : 1,
+    x: Number.isFinite(Number(value?.x)) ? Number(value.x) : 0,
+    y: Number.isFinite(Number(value?.y)) ? Number(value.y) : 0,
+  };
+}
+
+function loadSavedFits() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(FIT_STORAGE_KEY) || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (_error) {
+    return {};
+  }
+}
+
+function getMaskFit(id) {
+  if (!workingFits[id]) workingFits[id] = normalizeFit(savedFits[id]);
+  return workingFits[id];
+}
+
+function persistSavedFits() {
+  try {
+    localStorage.setItem(FIT_STORAGE_KEY, JSON.stringify(savedFits));
+    return true;
+  } catch (_error) {
+    return false;
+  }
+}
+
+function signed(value, digits = 2) {
+  const number = Number(value);
+  if (Math.abs(number) < 10 ** -digits) return Number(0).toFixed(digits);
+  return `${number > 0 ? "+" : ""}${number.toFixed(digits)}`;
+}
+
+function updateFitLabels() {
+  if (!selectedMask) return;
+  const fit = getMaskFit(selectedMask.id);
+  fitScaleValue.textContent = `${Math.round(fit.scale * 100)}%`;
+  fitXValue.textContent = signed(fit.x);
+  fitYValue.textContent = signed(fit.y);
+  fitValues.textContent = `scale ×${fit.scale.toFixed(2)} · x ${signed(fit.x)} · y ${signed(fit.y)}`;
+}
+
+function loadFitControls(id) {
+  const fit = getMaskFit(id);
+  fitScaleInput.value = String(Math.round(fit.scale * 100));
+  fitXInput.value = String(Math.round(fit.x * 100));
+  fitYInput.value = String(Math.round(fit.y * 100));
+  fitStatus.textContent = savedFits[id] ? "saved on this device" : "";
+  updateFitLabels();
+}
+
+function redrawAdjustedMask() {
+  if (selfieImage) drawSelfie();
+}
+
+function updateFitFromControls() {
+  if (!selectedMask) return;
+  const fit = getMaskFit(selectedMask.id);
+  fit.scale = Number(fitScaleInput.value) / 100;
+  fit.x = Number(fitXInput.value) / 100;
+  fit.y = Number(fitYInput.value) / 100;
+  fitStatus.textContent = "not saved yet";
+  updateFitLabels();
+  redrawAdjustedMask();
+}
+
+function finalMaskValues() {
+  return Object.fromEntries(MASKS.map((mask) => {
+    const fit = getMaskFit(mask.id);
+    return [mask.id, {
+      scale: Number((mask.scale * fit.scale).toFixed(3)),
+      offsetX: Number((mask.offsetX + fit.x).toFixed(3)),
+      offsetY: Number((mask.offsetY + fit.y).toFixed(3)),
+    }];
+  }));
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (_error) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    const copied = document.execCommand("copy");
+    textarea.remove();
+    return copied;
+  }
+}
 
 function productName(id) {
   return productById.get(id)?.name || id;
@@ -96,6 +210,7 @@ async function selectMask(id) {
   const nextMask = maskById.get(id) || MASKS[0];
   selectedMask = nextMask;
   selectedName.textContent = productName(nextMask.id);
+  loadFitControls(nextMask.id);
   picker.querySelectorAll(".mask-option").forEach((button) => {
     button.classList.toggle("active", button.dataset.maskId === nextMask.id);
   });
@@ -398,13 +513,14 @@ function poseFromLandmarks(landmarks) {
 
 function drawMask(pose) {
   if (!selectedImage || !selectedMask || !pose) return;
-  const width = pose.width * selectedMask.scale;
+  const fit = getMaskFit(selectedMask.id);
+  const width = pose.width * selectedMask.scale * fit.scale;
   const height = width * (selectedImage.naturalHeight / selectedImage.naturalWidth);
 
   ctx.save();
   ctx.translate(
-    pose.x + pose.width * selectedMask.offsetX,
-    pose.y + pose.width * selectedMask.offsetY
+    pose.x + pose.width * (selectedMask.offsetX + fit.x),
+    pose.y + pose.width * (selectedMask.offsetY + fit.y)
   );
   ctx.rotate(pose.angle);
   ctx.drawImage(
@@ -586,6 +702,31 @@ async function capturePhoto() {
   setTimeout(() => URL.revokeObjectURL(link.href), 1000);
 }
 
+function saveCurrentFit() {
+  if (!selectedMask) return;
+  savedFits[selectedMask.id] = normalizeFit(getMaskFit(selectedMask.id));
+  fitStatus.textContent = persistSavedFits()
+    ? `saved for ${productName(selectedMask.id)}`
+    : "browser storage is unavailable";
+}
+
+function resetCurrentFit() {
+  if (!selectedMask) return;
+  delete savedFits[selectedMask.id];
+  workingFits[selectedMask.id] = normalizeFit(null);
+  persistSavedFits();
+  loadFitControls(selectedMask.id);
+  fitStatus.textContent = "reset to project defaults";
+  redrawAdjustedMask();
+}
+
+async function copyAllFitValues() {
+  const copied = await copyText(JSON.stringify(finalMaskValues(), null, 2));
+  fitStatus.textContent = copied
+    ? "all final values copied — send them to Codex"
+    : "copy failed — take a screenshot of the values";
+}
+
 buildPicker();
 const requestedMask = new URLSearchParams(location.search).get("mask");
 selectMask(maskById.has(requestedMask) ? requestedMask : MASKS[0].id);
@@ -602,6 +743,17 @@ retryButton.addEventListener("click", () => {
   }
 });
 captureButton.addEventListener("click", capturePhoto);
+fitToggle.addEventListener("click", () => {
+  fitPanel.hidden = !fitPanel.hidden;
+  fitToggle.setAttribute("aria-expanded", String(!fitPanel.hidden));
+  fitToggle.textContent = fitPanel.hidden ? "adjust mask fit" : "close adjustment";
+});
+[fitScaleInput, fitXInput, fitYInput].forEach((input) => {
+  input.addEventListener("input", updateFitFromControls);
+});
+fitSaveButton.addEventListener("click", saveCurrentFit);
+fitResetButton.addEventListener("click", resetCurrentFit);
+fitCopyButton.addEventListener("click", copyAllFitValues);
 cameraChannel?.addEventListener("message", (event) => {
   if (event.data?.type === "request-camera" && event.data.source !== cameraSessionId) {
     resetCameraPrompt();

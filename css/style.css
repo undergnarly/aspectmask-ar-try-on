@@ -32,9 +32,9 @@
   --bg-card: #111016;
   --fg: #e9eef2;
   --muted: #b8c0be;
-  --accent: #591b20;       /* brand wine/burgundy — use for fills, buttons, borders */
-  --accent-text: #c79aa2;  /* burgundy lightened for legible small text/labels on black */
-  --accent-bright: #a83243; /* brand wine/burgundy, brightened — for the one high-stakes "order" button only */
+  --accent: #74192b;       /* deep premium burgundy */
+  --accent-text: #d65a6d;  /* brighter crimson for prices and small accents */
+  --accent-bright: #ca2d47; /* high-intent crimson-burgundy CTA */
   --line: #232329;
   --radius: 5px;
   --font-display: "Elms Sans", "Gilroy", sans-serif;
@@ -219,9 +219,10 @@ body.is-ready .hero-photo-overlay-text { animation: hero-copy-in 1s .22s cubic-b
    column here + margin-top:auto on .card-btn pins the button to the
    bottom of every card, regardless of how much text is above it. */
 .card {
-  background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--bg-card); border: 0; border-radius: var(--radius);
   overflow: hidden; cursor: pointer; -webkit-tap-highlight-color: rgba(233,238,242,0.15);
   display: flex; flex-direction: column; height: 100%;
+  box-shadow: 0 20px 46px rgba(0,0,0,.32);
 }
 .card-media { position: relative; width: 100%; aspect-ratio: 3/4; overflow: hidden; }
 .card-photo {
@@ -252,20 +253,32 @@ body.is-ready .hero-photo-overlay-text { animation: hero-copy-in 1s .22s cubic-b
 /* font-weight 400 — our Gilroy has only Regular(400)/Medium(500)/Heavy(700)
    loaded, no lighter "thin" cut exists, so Regular is as light as this can
    get without adding a new font file. */
-.card-price { font-size: 15px; font-weight: 400; color: var(--accent-text); margin-bottom: 10px; }
-/* Outline only, no fill — 2026-07-27 per Lena: a solid white button was
-   pulling too much attention off the product photo itself; the whole card
-   is already tappable, so the button just needs to read clearly, not shout. */
+.card-price {
+  font-size: 15px; font-weight: 500; color: #e05a6d; margin-bottom: 10px;
+  letter-spacing: .025em; text-shadow: 0 0 22px rgba(202,45,71,.34);
+}
 .card-btn {
+  position: relative; overflow: hidden; isolation: isolate;
   width: 100%; text-align: center; font-size: 12px; padding: 12px;
-  border: 1px solid rgba(199,154,162,.68); background: rgba(89,27,32,.78); color: var(--fg);
+  border: 0; color: #fff;
+  background: linear-gradient(108deg, #711526 0%, #a51f36 34%, #d43b55 48%, #b7243d 62%, #771627 100%);
+  background-size: 240% 100%;
   border-radius: var(--radius); font-weight: 500; letter-spacing: 0.06em; text-transform: none;
-  margin-top: 2px; backdrop-filter: blur(3px);
+  margin-top: 2px; box-shadow: inset 0 1px 0 rgba(255,255,255,.13), 0 12px 28px rgba(183,36,61,.28);
+  animation: card-cta-sheen 6.2s cubic-bezier(.45,0,.2,1) infinite;
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+}
+.card-btn:active { transform: scale(.985); filter: brightness(1.08); }
+@media (hover: hover) { .card-btn:hover { filter: brightness(1.07); box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 15px 34px rgba(202,45,71,.34); } }
+@keyframes card-cta-sheen {
+  0%, 20% { background-position: 100% 50%; }
+  58%, 100% { background-position: 0% 50%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .site-loader-logo,
-  .site-loader-line span { animation: none; }
+  .site-loader-line span,
+  .card-btn { animation: none; }
   .hero-photo-frame,
   .card-photo { transition: none; transform: none; }
   body.is-ready .hero-video,

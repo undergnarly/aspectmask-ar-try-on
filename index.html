@@ -75,8 +75,8 @@ src="https://www.facebook.com/tr?id=1063506702684823&ev=PageView&noscript=1"
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Elms+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="/css/style.css?v=20260811e" />
-<noscript><style>body.is-loading{overflow:auto}.site-loader{display:none!important}</style></noscript>
+<link rel="stylesheet" href="/css/style.css?v=20260811f" />
+<noscript><style>body.is-loading{overflow:auto}.site-loader{display:none!important}.site-header{opacity:1!important}</style></noscript>
 </head>
 <body class="is-loading">
 
@@ -103,8 +103,11 @@ src="https://www.facebook.com/tr?id=1063506702684823&ev=PageView&noscript=1"
 </noscript>
 <!-- NOSCRIPT-SEO:END -->
 
-<!-- Header removed per Lena 2026-07-27 — page now opens straight into the
-     hero photo, no bar/logo above it. -->
+<!-- Fixed brand veil: the logo stays visible while the background fades into
+     the page instead of creating a separate, heavy navigation bar. -->
+<header class="site-header" aria-label="ASPECT MASK">
+  <img class="header-logo" src="/assets/brand/logo.png" alt="ASPECT MASK" fetchpriority="high" />
+</header>
 
 <!-- ============ HERO ============ -->
 <!-- Title/subtitle overlaid on the photo (bottom, over a gradient scrim) —
@@ -285,8 +288,8 @@ src="https://www.facebook.com/tr?id=1063506702684823&ev=PageView&noscript=1"
      (observed 2026-07-28: stale copy served for several minutes after a fresh commit even
      though the origin already had the new content) — bump ?v= on every app.js/config.js
      change so visitors always get the current file instead of waiting out the CDN cache -->
-<script src="/js/config.js?v=20260811e"></script>
-<script src="/js/products.js?v=20260811e"></script>
-<script src="/js/app.js?v=20260811e"></script>
+<script src="/js/config.js?v=20260811f"></script>
+<script src="/js/products.js?v=20260811f"></script>
+<script src="/js/app.js?v=20260811f"></script>
 </body>
 </html>

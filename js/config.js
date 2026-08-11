@@ -31,6 +31,8 @@ const SITE = {
   // resolved wrong (404, failed request) whenever this same shared app.js runs
   // on a nested /products/<id> page instead of "/" — leading slash fixes it
   heroPhoto: "/assets/brand/hero-banner.jpg",
+  heroVideoWebm: "/assets/products/black-bird-eye/aspect-black-bird-eye-black-fashion-mask-headpiece-hero-video.webm",
+  heroVideoMp4: "/assets/products/black-bird-eye/aspect-black-bird-eye-black-fashion-mask-headpiece-hero-video.mp4",
 
   heroTitle: "Feel insane.",
   heroSubtitle: "At the event. On camera. Inside out.",

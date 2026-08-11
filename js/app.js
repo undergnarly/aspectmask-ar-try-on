@@ -53,9 +53,18 @@
     }, true);
   });
 
-  if (SITE.heroPhoto) {
-    document.getElementById("hero-photo-img-slot").innerHTML =
-      `<img src="${SITE.heroPhoto}" alt="Model wearing an ASPECT mask — eyes visible through the design" />`;
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const saveDataEnabled = Boolean(navigator.connection?.saveData);
+  const heroMediaSlot = document.getElementById("hero-photo-img-slot");
+
+  if (SITE.heroVideoMp4 && !prefersReducedMotion && !saveDataEnabled) {
+    heroMediaSlot.innerHTML = `<video class="hero-video" autoplay muted loop playsinline preload="metadata" poster="${SITE.heroPhoto || ""}" aria-label="Model wearing an ASPECT mask">
+      ${SITE.heroVideoWebm ? `<source src="${SITE.heroVideoWebm}" type="video/webm" />` : ""}
+      <source src="${SITE.heroVideoMp4}" type="video/mp4" />
+    </video>`;
+  } else if (SITE.heroPhoto) {
+    heroMediaSlot.innerHTML =
+      `<img class="hero-photo-frame is-active" src="${SITE.heroPhoto}" alt="Model wearing an ASPECT mask — eyes visible through the design" />`;
   }
   // else: leave the CSS placeholder (photo not shot yet) as-is
 
@@ -217,26 +226,104 @@
 
   // ---------- render product grid ----------
   const grid = document.getElementById("product-grid");
+  const cardImageSets = new Map(PRODUCTS.map((product) => [
+    product.id,
+    product.media
+      .filter((item) => item.src && item.type !== "video")
+      .map((item) => mediaPath(product.id, item.src)),
+  ]));
+
   grid.innerHTML = PRODUCTS.map((p, i) => {
-    const cover = p.media.find((m) => m.src) || p.media[0];
+    const cover = p.media.find((m) => m.src && m.type !== "video") || p.media[0];
     // Same LCP fix as the carousel's first slide (see slideImgAttrs above): the first
     // grid card's cover photo is the homepage's own LCP candidate, so it must not be
     // loading="lazy" — every other card (below the fold on first paint) stays lazy.
     const coverHTML = cover.src
-      ? `<img src="${mediaPath(p.id, cover.src)}" alt="${p.name}" ${slideImgAttrs(i === 0)} />`
+      ? `<img class="card-photo is-active" src="${mediaPath(p.id, cover.src)}" alt="${p.name}" ${slideImgAttrs(i === 0)} />
+         <img class="card-photo" alt="" aria-hidden="true" loading="lazy" decoding="async" />`
       : `<div class="placeholder-slide"><span class="ph-icon">📷</span><span class="ph-label">${cover.slot}</span></div>`;
     return `
       <div class="card" data-id="${p.id}">
         <div class="card-media">
           ${coverHTML}
-        </div>
-        <div class="card-info">
-          <p class="card-name">${p.name}</p>
-          ${p.price ? `<p class="card-price">${p.price}</p>` : ""}
-          <button class="card-btn" type="button">view piece</button>
+          <div class="card-photo-scrim" aria-hidden="true"></div>
+          <div class="card-info">
+            <p class="card-name">${p.name}</p>
+            ${p.price ? `<p class="card-price">${p.price}</p>` : ""}
+            <button class="card-btn" type="button">view piece</button>
+          </div>
         </div>
       </div>`;
   }).join("");
+
+  // Cross-fade through every photo while the card is visible. Only the next
+  // photo is loaded, keeping the mobile homepage light despite the full
+  // editorial gallery behind each piece.
+  if (!prefersReducedMotion && !saveDataEnabled && "IntersectionObserver" in window) {
+    const cardCycleStates = new WeakMap();
+
+    function stopCardCycle(card) {
+      const state = cardCycleStates.get(card);
+      if (!state) return;
+      state.visible = false;
+      window.clearTimeout(state.timer);
+    }
+
+    function startCardCycle(card, order) {
+      const images = cardImageSets.get(card.dataset.id) || [];
+      if (images.length < 2) return;
+
+      let state = cardCycleStates.get(card);
+      if (!state) {
+        state = { activeLayer: 0, index: 0, timer: 0, visible: false, busy: false };
+        cardCycleStates.set(card, state);
+      }
+      if (state.visible) return;
+      state.visible = true;
+
+      const scheduleNext = (delay = 3000) => {
+        window.clearTimeout(state.timer);
+        state.timer = window.setTimeout(async () => {
+          if (!state.visible || state.busy) return;
+          state.busy = true;
+          state.index = (state.index + 1) % images.length;
+
+          const layers = card.querySelectorAll(".card-photo");
+          const current = layers[state.activeLayer];
+          const nextLayerIndex = state.activeLayer === 0 ? 1 : 0;
+          const next = layers[nextLayerIndex];
+          next.src = images[state.index];
+
+          try { await next.decode(); } catch (_error) {}
+          if (!state.visible) {
+            state.busy = false;
+            return;
+          }
+
+          next.classList.add("is-active");
+          current.classList.remove("is-active");
+          state.activeLayer = nextLayerIndex;
+          state.busy = false;
+          scheduleNext();
+        }, delay);
+      };
+
+      scheduleNext(2500 + order * 220);
+    }
+
+    const cardObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const order = Number(entry.target.dataset.cardOrder || 0);
+        if (entry.isIntersecting) startCardCycle(entry.target, order);
+        else stopCardCycle(entry.target);
+      });
+    }, { threshold: 0.2 });
+
+    grid.querySelectorAll(".card").forEach((card, order) => {
+      card.dataset.cardOrder = String(order);
+      cardObserver.observe(card);
+    });
+  }
 
   grid.querySelectorAll(".card").forEach((card) => {
     card.addEventListener("click", () => {

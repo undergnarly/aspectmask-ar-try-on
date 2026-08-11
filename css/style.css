@@ -98,17 +98,18 @@ html.motion-enabled .reveal-item.is-revealed { opacity: 1; filter: blur(0); tran
   display: flex; justify-content: center; align-items: flex-start;
   padding-top: calc(env(safe-area-inset-top) + 16px);
   background: linear-gradient(to bottom,
-    rgba(3,2,8,.99) 0%,
-    rgba(3,2,8,.94) 26%,
-    rgba(3,2,8,.68) 49%,
-    rgba(3,2,8,.27) 73%,
+    rgba(3,2,8,.44) 0%,
+    rgba(3,2,8,.38) 22%,
+    rgba(3,2,8,.27) 43%,
+    rgba(3,2,8,.13) 66%,
+    rgba(3,2,8,.04) 84%,
     rgba(3,2,8,0) 100%);
   pointer-events: none;
   opacity: 1;
   transition: opacity .8s .12s cubic-bezier(.22,.61,.36,1), transform .8s .12s cubic-bezier(.22,.61,.36,1);
 }
 .header-logo {
-  width: 118px; height: auto;
+  width: 83px; height: auto;
   filter: invert(1);
   opacity: .94;
   transform: translateZ(0);

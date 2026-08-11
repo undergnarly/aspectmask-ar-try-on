@@ -55,10 +55,11 @@
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const saveDataEnabled = Boolean(navigator.connection?.saveData);
+  if (!prefersReducedMotion) document.documentElement.classList.add("motion-enabled");
   const heroMediaSlot = document.getElementById("hero-photo-img-slot");
 
   if (SITE.heroVideoMp4 && !prefersReducedMotion && !saveDataEnabled) {
-    heroMediaSlot.innerHTML = `<video class="hero-video" autoplay muted loop playsinline preload="metadata" poster="${SITE.heroPhoto || ""}" aria-label="Model wearing an ASPECT mask">
+    heroMediaSlot.innerHTML = `<video class="hero-video" autoplay muted loop playsinline preload="auto" poster="${SITE.heroPhoto || ""}" aria-label="Model wearing an ASPECT mask">
       ${SITE.heroVideoWebm ? `<source src="${SITE.heroVideoWebm}" type="video/webm" />` : ""}
       <source src="${SITE.heroVideoMp4}" type="video/mp4" />
     </video>`;
@@ -246,11 +247,14 @@
 
   grid.innerHTML = PRODUCTS.map((p, i) => {
     const cover = p.media.find((m) => m.src && m.type !== "video") || p.media[0];
-    // Same LCP fix as the carousel's first slide (see slideImgAttrs above): the first
-    // grid card's cover photo is the homepage's own LCP candidate, so it must not be
-    // loading="lazy" — every other card (below the fold on first paint) stays lazy.
+    // All six initial covers are loaded behind the branded opening screen. This is a
+    // deliberately small payload compared with the full galleries, and guarantees
+    // that scrolling never reveals an empty product card after the site appears.
+    const coverAttrs = i === 0
+      ? `fetchpriority="high" loading="eager" decoding="async"`
+      : `fetchpriority="low" loading="eager" decoding="async"`;
     const coverHTML = cover.src
-      ? `<img class="card-photo is-active" src="${mediaPath(p.id, cover.src)}" alt="${p.name}" ${slideImgAttrs(i === 0)} />
+      ? `<img class="card-photo is-active" src="${mediaPath(p.id, cover.src)}" alt="${p.name}" ${coverAttrs} />
          <img class="card-photo" alt="" aria-hidden="true" loading="lazy" decoding="async" />`
       : `<div class="placeholder-slide"><span class="ph-icon">📷</span><span class="ph-label">${cover.slot}</span></div>`;
     return `
@@ -270,7 +274,8 @@
   // Cross-fade through every photo while the card is visible. Only the next
   // photo is loaded, keeping the mobile homepage light despite the full
   // editorial gallery behind each piece.
-  if (!prefersReducedMotion && !saveDataEnabled && "IntersectionObserver" in window) {
+  function activateCardImageCycles() {
+    if (prefersReducedMotion || saveDataEnabled || !("IntersectionObserver" in window)) return;
     const cardCycleStates = new WeakMap();
 
     function stopCardCycle(card) {
@@ -686,4 +691,82 @@
     copyField.setAttribute("readonly", "readonly");
     done();
   }
+
+  // ---------- polished opening + scroll reveals ----------
+  function waitForImage(image) {
+    if (!image || (image.complete && image.naturalWidth > 0)) return Promise.resolve();
+    return new Promise((resolve) => {
+      image.addEventListener("load", resolve, { once: true });
+      image.addEventListener("error", resolve, { once: true });
+    });
+  }
+
+  function waitForVideo(video) {
+    if (!video || video.readyState >= 3) return Promise.resolve();
+    return new Promise((resolve) => {
+      video.addEventListener("canplay", resolve, { once: true });
+      video.addEventListener("error", resolve, { once: true });
+    });
+  }
+
+  function prepareRevealAnimations() {
+    const targets = [
+      document.querySelector(".hero .wrap"),
+      ...document.querySelectorAll(".card"),
+      document.querySelector(".reviews-section .section-kicker"),
+      document.querySelector(".reviews-section .section-title"),
+      document.querySelector(".reviews-section .section-note"),
+      ...document.querySelectorAll(".review-card"),
+      document.querySelector(".artist-media"),
+      document.querySelector(".artist-copy"),
+      document.querySelector(".site-footer"),
+    ].filter(Boolean);
+
+    targets.forEach((target) => target.classList.add("reveal-item"));
+    document.querySelectorAll(".review-card").forEach((card, index) => {
+      card.style.setProperty("--reveal-delay", `${index * 90}ms`);
+    });
+
+    if (prefersReducedMotion || !("IntersectionObserver" in window)) {
+      return () => targets.forEach((target) => target.classList.add("is-revealed"));
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("is-revealed");
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -6%" });
+
+    return () => targets.forEach((target) => observer.observe(target));
+  }
+
+  async function revealSiteWhenReady() {
+    const loader = document.getElementById("site-loader");
+    const startRevealAnimations = prepareRevealAnimations();
+    const criticalImages = [
+      ...document.querySelectorAll(".hero-photo-frame.is-active, .card-photo.is-active"),
+      document.querySelector("#modal-carousel .carousel-slide:first-child img"),
+    ].filter(Boolean);
+    const heroVideo = document.querySelector(".hero-video");
+    const fontReady = document.fonts?.ready || Promise.resolve();
+    const visualReady = Promise.all([
+      fontReady,
+      waitForVideo(heroVideo),
+      ...criticalImages.map(waitForImage),
+    ]);
+    const failsafe = new Promise((resolve) => window.setTimeout(resolve, 7500));
+    const minimumBrandMoment = new Promise((resolve) => window.setTimeout(resolve, 650));
+
+    await Promise.all([minimumBrandMoment, Promise.race([visualReady, failsafe])]);
+    document.body.classList.remove("is-loading");
+    document.body.classList.add("is-ready");
+    loader?.setAttribute("aria-hidden", "true");
+    activateCardImageCycles();
+    requestAnimationFrame(startRevealAnimations);
+    window.setTimeout(() => { if (loader) loader.hidden = true; }, 900);
+  }
+
+  revealSiteWhenReady();
 })();

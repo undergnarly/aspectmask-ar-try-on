@@ -59,6 +59,36 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 img, video { display: block; max-width: 100%; }
 button { font-family: inherit; cursor: pointer; }
 
+/* ---------- branded loading screen ---------- */
+body.is-loading { overflow: hidden; }
+.site-loader {
+  position: fixed; z-index: 9999; inset: 0; display: grid; place-items: center;
+  background: var(--bg); opacity: 1; visibility: visible;
+  transition: opacity .78s cubic-bezier(.22,.61,.36,1), visibility .78s step-end;
+}
+body.is-ready .site-loader { opacity: 0; visibility: hidden; pointer-events: none; }
+.site-loader-inner { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+.site-loader-logo {
+  width: 126px; height: auto; filter: invert(1); opacity: .92;
+  animation: loader-breathe 1.8s ease-in-out infinite;
+}
+.site-loader-line { width: 94px; height: 1px; overflow: hidden; background: rgba(233,238,242,.12); }
+.site-loader-line span {
+  display: block; width: 44%; height: 100%; background: var(--accent-bright);
+  animation: loader-line 1.25s cubic-bezier(.65,0,.35,1) infinite;
+}
+@keyframes loader-breathe { 0%,100% { opacity:.58; transform:scale(.985); } 50% { opacity:1; transform:scale(1); } }
+@keyframes loader-line { 0% { transform:translateX(-110%); } 100% { transform:translateX(340%); } }
+
+/* Elements receive these classes from app.js only after the loading screen
+   has finished, so entrance motion never runs invisibly behind the loader. */
+html.motion-enabled .reveal-item {
+  opacity: 0; filter: blur(5px); transform: translateY(26px);
+  transition: opacity .9s cubic-bezier(.22,.61,.36,1), transform .9s cubic-bezier(.22,.61,.36,1), filter .9s ease;
+  transition-delay: var(--reveal-delay, 0ms);
+}
+html.motion-enabled .reveal-item.is-revealed { opacity: 1; filter: blur(0); transform: translateY(0); }
+
 .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
 
 /* ---------- header ---------- */
@@ -85,9 +115,9 @@ button { font-family: inherit; cursor: pointer; }
   width: 100%;
   max-width: 900px; /* keeps the banner from ballooning in height on wide desktop windows — mobile is the real target */
   margin: 0 auto;
-  aspect-ratio: 9 / 10; /* ~half of a standard mobile screen height (390x844) — crops top/bottom of hero-banner.jpg symmetrically via object-fit:cover below, no stretching/distortion */
+  aspect-ratio: 3 / 4; /* matches the native vertical video and gives the mobile opening more presence */
+  max-height: 100svh;
   background: var(--bg-card);
-  border-bottom: 1px solid var(--line);
   overflow: hidden;
 }
 .hero-photo-img-slot { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
@@ -104,12 +134,12 @@ button { font-family: inherit; cursor: pointer; }
 /* Gradient scrim — guarantees the white overlay text stays readable no
    matter what's in that part of the photo, even if the crop changes later. */
 .hero-photo-scrim {
-  position: absolute; left: 0; right: 0; bottom: 0; height: 55%;
-  background: linear-gradient(to bottom, rgba(3,2,8,0) 0%, rgba(3,2,8,0.75) 65%, rgba(3,2,8,0.92) 100%);
+  position: absolute; z-index: 1; left: 0; right: 0; bottom: -1px; height: 72%;
+  background: linear-gradient(to bottom, rgba(3,2,8,0) 0%, rgba(3,2,8,.12) 28%, rgba(3,2,8,.72) 68%, #030208 100%);
   pointer-events: none;
 }
 .hero-photo-overlay-text {
-  position: absolute; left: 20px; right: 20px; bottom: 24px;
+  position: absolute; z-index: 2; left: 20px; right: 20px; bottom: 42px;
   text-align: center;
 }
 /* font-weight 400 (thin, same as .card-name) — per Lena 2026-07-29: the hero
@@ -121,7 +151,13 @@ button { font-family: inherit; cursor: pointer; }
 /* ---------- hero ---------- */
 /* bottom padding trimmed 2026-07-27 per Lena — catalog cards should follow
    right after the "Only 6 pieces exist now:" heading, not after a big gap. */
-.hero { padding: 28px 0 18px; text-align: left; }
+.hero { position: relative; z-index: 3; margin-top: -2px; padding: 30px 0 18px; text-align: left; background: var(--bg); }
+
+body.is-ready .hero-video,
+body.is-ready .hero-photo-frame.is-active { animation: hero-settle 1.35s cubic-bezier(.22,.61,.36,1) both; }
+body.is-ready .hero-photo-overlay-text { animation: hero-copy-in 1s .22s cubic-bezier(.22,.61,.36,1) both; }
+@keyframes hero-settle { from { opacity:.35; transform:scale(1.035); } to { opacity:1; transform:scale(1); } }
+@keyframes hero-copy-in { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
 
 .hero-wear-for-heading {
   font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
@@ -228,8 +264,13 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .site-loader-logo,
+  .site-loader-line span { animation: none; }
   .hero-photo-frame,
   .card-photo { transition: none; transform: none; }
+  body.is-ready .hero-video,
+  body.is-ready .hero-photo-frame.is-active,
+  body.is-ready .hero-photo-overlay-text { animation: none; }
 }
 
 /* ---------- media placeholder (used when a photo/video file is missing) ---------- */

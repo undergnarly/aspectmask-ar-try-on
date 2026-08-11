@@ -80,6 +80,17 @@
   document.getElementById("order-title").textContent = SITE.orderPopupTitle;
   document.getElementById("order-explainer").textContent = SITE.orderPopupExplainer;
 
+  const artistVideo = document.getElementById("artist-video");
+  if (artistVideo && "IntersectionObserver" in window && !prefersReducedMotion && !saveDataEnabled) {
+    const artistVideoObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) artistVideo.play().catch(() => {});
+        else artistVideo.pause();
+      });
+    }, { threshold: 0.45 });
+    artistVideoObserver.observe(artistVideo);
+  }
+
   // ---------- helpers ----------
   // Root-absolute so it resolves the same whether the current page is "/"
   // (homepage) or a nested static product page like "/products/<id>" —

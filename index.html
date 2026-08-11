@@ -72,9 +72,10 @@ src="https://www.facebook.com/tr?id=1063506702684823&ev=PageView&noscript=1"
 
 <link rel="icon" type="image/png" href="/assets/brand/logo.png">
 
-<!-- Gilroy is self-hosted (assets/brand/fonts/) and loaded via @font-face in css/style.css — no external font request needed -->
-
-<link rel="stylesheet" href="/css/style.css?v=20260811b" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Elms+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/css/style.css?v=20260811c" />
 </head>
 <body>
 
@@ -123,6 +124,60 @@ src="https://www.facebook.com/tr?id=1063506702684823&ev=PageView&noscript=1"
 <section class="catalog" id="catalog">
   <div class="wrap">
     <div class="grid" id="product-grid"><!-- cards injected by js/app.js --></div>
+  </div>
+</section>
+
+<!-- ============ CLIENT STORIES ============ -->
+<section class="reviews-section" aria-labelledby="reviews-title">
+  <div class="wrap">
+    <p class="section-kicker">Client stories</p>
+    <h2 class="section-title" id="reviews-title">Made to be remembered.</h2>
+    <p class="section-note">Preview copy — replace with verified client reviews before launch.</p>
+    <div class="reviews-track">
+      <article class="review-card">
+        <span class="review-mark" aria-hidden="true">“</span>
+        <p class="review-copy">The mask became the centre of the entire look. People stopped me all night to ask who made it.</p>
+        <p class="review-meta">Client quote placeholder · Black Bird Eye</p>
+      </article>
+      <article class="review-card">
+        <span class="review-mark" aria-hidden="true">“</span>
+        <p class="review-copy">It feels like wearable sculpture, but it is surprisingly light. I could move, dance and forget I had it on.</p>
+        <p class="review-meta">Client quote placeholder · Ruby Dune</p>
+      </article>
+      <article class="review-card">
+        <span class="review-mark" aria-hidden="true">“</span>
+        <p class="review-copy">Nothing else in my wardrobe has this energy. Knowing there is only one makes it feel truly personal.</p>
+        <p class="review-meta">Client quote placeholder · Electric Fire</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ABOUT THE ARTIST ============ -->
+<section class="artist-section" aria-labelledby="artist-title">
+  <div class="wrap">
+    <div class="artist-media">
+      <video id="artist-video" muted loop playsinline preload="none"
+        poster="/assets/products/ruby-dune/aspect-ruby-dune-red-fashion-mask-headpiece-handmade-proof.jpg"
+        aria-label="ASPECT mask being shaped and shown by hand">
+        <source src="/assets/products/ruby-dune/aspect-ruby-dune-red-fashion-mask-headpiece-hands-on-video.webm" type="video/webm" />
+        <source src="/assets/products/ruby-dune/aspect-ruby-dune-red-fashion-mask-headpiece-hands-on-video.mp4" type="video/mp4" />
+      </video>
+      <span class="artist-media-label">Made by hand · Never repeated</span>
+    </div>
+    <div class="artist-copy">
+      <p class="section-kicker">About the artist</p>
+      <h2 class="section-title" id="artist-title">Not manufactured.<br />Authored.</h2>
+      <p>ASPECT is built around a simple idea: a mask should not hide you. It should reveal a version of you that people cannot ignore.</p>
+      <p>Every piece is sculpted by hand over several days. The flexible structure, wrapped details and final silhouette are formed individually — without moulds, mass production or repeats.</p>
+      <p>That is why each mask has its own character and its own price. You are not buying an accessory from a production line. You are claiming the only existing version of an artist’s idea.</p>
+      <div class="artist-facts" aria-label="What makes every ASPECT mask unique">
+        <div><strong>1 of 1</strong><span>Only one exists</span></div>
+        <div><strong>Several days</strong><span>Of manual work</span></div>
+        <div><strong>Hand-sculpted</strong><span>From first line to final fit</span></div>
+      </div>
+      <p class="section-note artist-draft-note">Draft story — replace with Elena’s own words and real process video.</p>
+    </div>
   </div>
 </section>
 
@@ -222,8 +277,8 @@ src="https://www.facebook.com/tr?id=1063506702684823&ev=PageView&noscript=1"
      (observed 2026-07-28: stale copy served for several minutes after a fresh commit even
      though the origin already had the new content) — bump ?v= on every app.js/config.js
      change so visitors always get the current file instead of waiting out the CDN cache -->
-<script src="/js/config.js?v=20260811b"></script>
-<script src="/js/products.js?v=20260811b"></script>
-<script src="/js/app.js?v=20260811b"></script>
+<script src="/js/config.js?v=20260811c"></script>
+<script src="/js/products.js?v=20260811c"></script>
+<script src="/js/app.js?v=20260811c"></script>
 </body>
 </html>

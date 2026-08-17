@@ -405,15 +405,19 @@ body.is-ready .hero-photo-overlay-text { animation: hero-copy-in 1s .22s cubic-b
   background: linear-gradient(180deg, rgba(3,2,8,0) 0%, rgba(3,2,8,0.78) 25%, rgba(3,2,8,0.94) 60%, rgba(3,2,8,0.96) 100%);
 }
 .cta-slide-title {
-  font-family: var(--font-display); font-weight: 400; font-size: 38px; line-height: 1.05;
+  font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1.05;
   color: var(--fg); margin-bottom: 10px; width: 100%; text-align: center;
 } /* not bold — same weight as the product name, per Lena 2026-07-28 (was 700) */
 .cta-slide-sub {
-  font-family: var(--font-body); font-size: 19.5px; line-height: 1.3; color: var(--accent-text);
+  font-family: var(--font-body); font-size: 17px; line-height: 1.3; color: var(--accent-text);
   font-weight: 400; text-align: center;
 }
+.finalcta-slide-caption {
+  margin-top: 11px; color: rgba(233,238,242,.68); font-size: 10.5px;
+  font-weight: 500; letter-spacing: .09em; text-transform: uppercase; text-align: center;
+}
 
-/* ---------- client stories ---------- */
+/* ---------- archive + industry proof ---------- */
 .section-kicker {
   margin-bottom: 10px; color: var(--accent-text); font-size: 10px; font-weight: 600;
   letter-spacing: .16em; text-transform: uppercase;
@@ -423,34 +427,51 @@ body.is-ready .hero-photo-overlay-text { animation: hero-copy-in 1s .22s cubic-b
   letter-spacing: -.01em; color: var(--fg);
 }
 .section-note { margin-top: 10px; color: var(--muted); font-size: 10.5px; line-height: 1.45; }
-.reviews-section {
-  padding: 64px 0 68px; overflow: hidden; border-top: 1px solid var(--line);
-  background: linear-gradient(180deg, #030208 0%, #09060b 52%, #12080d 100%);
+.section-intro { max-width: 420px; margin-top: 12px; color: #cbd0d0; font-size: 14px; line-height: 1.55; }
+.archive-section { padding: 68px 0 72px; background: #030208; }
+.archive-grid { columns: 2; column-gap: 8px; margin-top: 28px; }
+.archive-piece {
+  position: relative; width: 100%; margin: 0 0 8px; padding: 0; break-inside: avoid;
+  display: block; overflow: hidden; border: 0; border-radius: var(--radius);
+  background: #0e0c11; color: var(--fg); text-align: left;
 }
-.reviews-track {
-  display: flex; gap: 12px; margin-top: 24px; padding: 0 20px 5px 0;
-  overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+.archive-piece[hidden] { display: none; }
+.archive-piece img { display: block; width: 100%; height: auto; min-height: 150px; object-fit: cover; transition: transform .7s cubic-bezier(.2,.8,.2,1); }
+.archive-piece::after { content: ""; position: absolute; inset: 48% 0 0; background: linear-gradient(transparent, rgba(2,1,5,.82)); }
+.archive-piece span { position: absolute; z-index: 1; left: 11px; right: 11px; bottom: 10px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.archive-piece:active img { transform: scale(1.025); }
+.archive-more {
+  display: block; width: 100%; margin-top: 18px; padding: 15px 18px; border: 0; border-radius: var(--radius);
+  background: linear-gradient(110deg, #7d1525, #c22f43, #7d1525); background-size: 220% 100%;
+  color: #fff; font: 600 12px/1 var(--font-body); letter-spacing: .08em; text-transform: uppercase;
+  animation: card-cta-sheen 5s ease-in-out infinite;
 }
-.reviews-track::-webkit-scrollbar { display: none; }
-.review-card {
-  flex: 0 0 88%; min-height: 230px; padding: 24px 22px 20px; scroll-snap-align: start;
-  display: flex; flex-direction: column; border: 1px solid rgba(199,154,162,.24);
-  border-radius: var(--radius); background: linear-gradient(145deg, rgba(89,27,32,.3), rgba(17,16,22,.92) 55%);
+.archive-more[hidden] { display: none; }
+.as-seen-section { padding: 68px 0 72px; overflow: hidden; background: linear-gradient(180deg, #030208, #12080d); }
+.as-seen-track { display: flex; gap: 10px; margin-top: 28px; padding-right: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.as-seen-track::-webkit-scrollbar { display: none; }
+.as-seen-card {
+  position: relative; flex: 0 0 82%; aspect-ratio: 4 / 5; overflow: hidden; scroll-snap-align: start;
+  border-radius: var(--radius); background: #17121a; color: #fff; text-decoration: none;
 }
-.review-mark {
-  height: 42px; color: var(--accent-text); font-family: Georgia, serif;
-  font-size: 56px; line-height: .9;
-}
-.review-copy { color: #e1e5e4; font-size: 17px; line-height: 1.48; }
-.review-meta {
-  margin-top: auto; padding-top: 22px; color: var(--accent-text); font-size: 10px;
-  line-height: 1.4; letter-spacing: .06em; text-transform: uppercase;
-}
+.as-seen-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .8s cubic-bezier(.2,.8,.2,1); }
+.as-seen-card:active img { transform: scale(1.025); }
+.as-seen-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(2,1,5,.05), rgba(2,1,5,.1) 45%, rgba(2,1,5,.94)); }
+.as-seen-type, .as-seen-card strong, .as-seen-open { position: absolute; z-index: 1; left: 17px; right: 17px; }
+.as-seen-type { top: 16px; color: #f2c8ce; font-size: 9px; letter-spacing: .15em; text-transform: uppercase; }
+.as-seen-card strong { bottom: 42px; font: 400 25px/1.05 var(--font-display); }
+.as-seen-open { bottom: 17px; color: rgba(255,255,255,.72); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+
+.archive-lightbox { position: fixed; z-index: 80; inset: 0; display: none; align-items: center; justify-content: center; padding: 54px 18px 30px; background: rgba(2,1,5,.96); }
+.archive-lightbox.open { display: flex; flex-direction: column; }
+.archive-lightbox img { max-width: 100%; max-height: calc(100vh - 125px); border-radius: var(--radius); object-fit: contain; }
+.archive-lightbox p { margin-top: 13px; color: #e9edef; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+.archive-lightbox-close { position: absolute; top: max(14px, env(safe-area-inset-top)); right: 14px; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(255,255,255,.1); color: #fff; font-size: 25px; }
 
 /* ---------- about the artist ---------- */
 .artist-section { padding: 0 0 72px; background: #12080d; }
 .artist-media {
-  position: relative; aspect-ratio: 3 / 4; overflow: hidden; border: 1px solid rgba(199,154,162,.28);
+  position: relative; aspect-ratio: 3 / 4; overflow: hidden;
   border-radius: var(--radius); background: var(--bg-card);
 }
 .artist-media video { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -473,13 +494,12 @@ body.is-ready .hero-photo-overlay-text { animation: hero-copy-in 1s .22s cubic-b
 }
 .artist-facts strong { display: block; color: var(--fg); font-size: 13px; font-weight: 500; line-height: 1.2; }
 .artist-facts span { display: block; margin-top: 8px; color: var(--muted); font-size: 10px; line-height: 1.35; }
-.artist-draft-note { padding-top: 10px; border-top: 1px solid rgba(199,154,162,.18); }
-
 /* ---------- footer ---------- */
 .site-footer { border-top: 1px solid var(--line); padding: 34px 0 46px; text-align: center; }
 .footer-brand { height: 30px; width: auto; margin: 0 auto 10px; filter: invert(1); }
 .footer-line { color: var(--muted); font-size: 12.5px; margin-bottom: 10px; }
 .footer-ig { display: inline-block; font-size: 12.5px; color: var(--accent-text); font-weight: 600; }
+.footer-privacy { display: inline-block; margin-left: 16px; color: var(--muted); font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---------- modal (product detail) ---------- */
 .modal {

@@ -307,7 +307,10 @@ def main():
 
     # (url, [image_urls]) pairs — homepage has no per-product images list here,
     # its own hero image is added separately below.
-    url_entries = [(f"{SITE_ORIGIN}/", [f"{SITE_ORIGIN}/assets/brand/og-cover.jpg"])]
+    url_entries = [
+        (f"{SITE_ORIGIN}/", [f"{SITE_ORIGIN}/assets/brand/og-cover.jpg"]),
+        (f"{SITE_ORIGIN}/privacy/", []),
+    ]
     for product in products:
         page = replace_between(base_html, SEO_START, SEO_END, build_seo_block(product))
         page = replace_between(page, NOSCRIPT_START, NOSCRIPT_END, build_noscript_block(product))

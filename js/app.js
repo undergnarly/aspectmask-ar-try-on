@@ -92,6 +92,61 @@
     artistVideoObserver.observe(artistVideo);
   }
 
+  // ---------- sold archive + verified industry proof ----------
+  const archiveItems = Array.isArray(window.ASPECT_ARCHIVE) ? window.ASPECT_ARCHIVE : [];
+  const archiveGrid = document.getElementById("archive-grid");
+  const archiveMore = document.getElementById("archive-more");
+  const archiveLightbox = document.getElementById("archive-lightbox");
+  const archiveLightboxImage = document.getElementById("archive-lightbox-image");
+  const archiveLightboxName = document.getElementById("archive-lightbox-name");
+  const archiveInitialCount = 8;
+
+  function closeArchiveLightbox() {
+    archiveLightbox?.classList.remove("open");
+    archiveLightbox?.setAttribute("aria-hidden", "true");
+    if (archiveLightboxImage) archiveLightboxImage.src = "";
+  }
+
+  if (archiveGrid && archiveItems.length) {
+    archiveGrid.innerHTML = archiveItems.map((piece, index) => `
+      <button class="archive-piece" type="button" data-archive-index="${index}" ${index >= archiveInitialCount ? "hidden" : ""}>
+        <img src="${piece.src}" width="${piece.width}" height="${piece.height}" alt="${piece.name}, a sold one-of-one ASPECT mask" loading="lazy" decoding="async" />
+        <span>${piece.name}</span>
+      </button>`).join("");
+    if (archiveItems.length > archiveInitialCount) archiveMore.hidden = false;
+
+    archiveGrid.addEventListener("click", (event) => {
+      const button = event.target.closest(".archive-piece");
+      if (!button) return;
+      const piece = archiveItems[Number(button.dataset.archiveIndex)];
+      if (!piece) return;
+      archiveLightboxImage.src = piece.src;
+      archiveLightboxImage.alt = `${piece.name}, a sold one-of-one ASPECT mask`;
+      archiveLightboxName.textContent = `${piece.name} · sold`;
+      archiveLightbox.classList.add("open");
+      archiveLightbox.setAttribute("aria-hidden", "false");
+      track("archive_piece_open", { piece_name: piece.name });
+    });
+  } else {
+    document.querySelector(".archive-section")?.setAttribute("hidden", "");
+  }
+
+  archiveMore?.addEventListener("click", () => {
+    archiveGrid.querySelectorAll(".archive-piece[hidden]").forEach((piece) => { piece.hidden = false; });
+    archiveMore.hidden = true;
+    track("archive_expand", { piece_count: archiveItems.length });
+  });
+  document.getElementById("archive-lightbox-close")?.addEventListener("click", closeArchiveLightbox);
+  archiveLightbox?.addEventListener("click", (event) => {
+    if (event.target === archiveLightbox) closeArchiveLightbox();
+  });
+  document.querySelectorAll(".as-seen-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      track("as_seen_open", { proof_name: card.dataset.proof });
+      fbTrack("AsSeenOpen", { proof_name: card.dataset.proof }, false);
+    });
+  });
+
   // ---------- helpers ----------
   // Root-absolute so it resolves the same whether the current page is "/"
   // (homepage) or a nested static product page like "/products/<id>" —
@@ -213,6 +268,19 @@
         <div class="cta-slide-overlay">
           <p class="cta-slide-title">${item.ctaTitle || product.name}</p>
           <p class="cta-slide-sub">${item.ctaSub || "Tap “Order this piece” below to make it yours."}</p>
+        </div>
+      </div></div>`;
+    }
+
+    // Analytics-led final slide from Lena's 8-slide sequence. It shares the
+    // early CTA layout and adds one quiet shipping reassurance at the end.
+    if (item.type === "finalcta") {
+      return `<div class="carousel-slide"><div class="cta-slide finalcta-slide">
+        <img src="${src}" alt="${item.alt || `${product.name} — ${item.slot}`}" ${slideImgAttrs(isFirst)} />
+        <div class="cta-slide-overlay">
+          <p class="cta-slide-title">${item.ctaTitle || product.name}</p>
+          <p class="cta-slide-sub">${item.ctaSub || ""}</p>
+          ${item.caption ? `<p class="finalcta-slide-caption">${item.caption}</p>` : ""}
         </div>
       </div></div>`;
     }
@@ -713,17 +781,21 @@
     const targets = [
       document.querySelector(".hero .wrap"),
       ...document.querySelectorAll(".card"),
-      document.querySelector(".reviews-section .section-kicker"),
-      document.querySelector(".reviews-section .section-title"),
-      document.querySelector(".reviews-section .section-note"),
-      ...document.querySelectorAll(".review-card"),
+      document.querySelector(".archive-section .section-kicker"),
+      document.querySelector(".archive-section .section-title"),
+      document.querySelector(".archive-section .section-intro"),
+      ...document.querySelectorAll(".archive-piece"),
+      document.querySelector(".as-seen-section .section-kicker"),
+      document.querySelector(".as-seen-section .section-title"),
+      document.querySelector(".as-seen-section .section-intro"),
+      ...document.querySelectorAll(".as-seen-card"),
       document.querySelector(".artist-media"),
       document.querySelector(".artist-copy"),
       document.querySelector(".site-footer"),
     ].filter(Boolean);
 
     targets.forEach((target) => target.classList.add("reveal-item"));
-    document.querySelectorAll(".review-card").forEach((card, index) => {
+    document.querySelectorAll(".as-seen-card").forEach((card, index) => {
       card.style.setProperty("--reveal-delay", `${index * 90}ms`);
     });
 

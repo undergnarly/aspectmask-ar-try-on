@@ -9,12 +9,12 @@ const CAMERA_FRAME_TIMEOUT_MS = 10000;
 const TRACKER_TIMEOUT_MS = 30000;
 
 const MASKS = [
-  { id: "ruby-dune", asset: "/assets/ar/ruby-dune-mask.webp", scale: 1.48, anchorY: .79, offsetX: 0, offsetY: -.02 },
+  { id: "ruby-dune", asset: "/assets/ar/ruby-dune-mask.webp", scale: 1.11, anchorY: .79, offsetX: 0, offsetY: -.02 },
   { id: "black-bird-eye", asset: "/assets/ar/black-bird-eye-mask.webp", scale: 1.48, anchorY: .76, offsetX: 0, offsetY: -.02 },
-  { id: "black-fire", asset: "/assets/ar/black-fire-mask.webp", scale: 1.52, anchorY: .77, offsetX: 0, offsetY: -.03 },
+  { id: "black-fire", asset: "/assets/ar/black-fire-mask.webp", scale: 1.338, anchorY: .77, offsetX: 0, offsetY: -.03 },
   { id: "deep-ocean", asset: "/assets/ar/deep-ocean-mask.webp", scale: 1.5, anchorY: .77, offsetX: 0, offsetY: -.02 },
-  { id: "electric-fire", asset: "/assets/ar/electric-fire-mask.webp", scale: 1.55, anchorY: .78, offsetX: 0, offsetY: -.03 },
-  { id: "wine-heart", asset: "/assets/ar/wine-heart-mask.webp", scale: 1.53, anchorY: .78, offsetX: .02, offsetY: -.03 },
+  { id: "electric-fire", asset: "/assets/ar/electric-fire-mask.webp", scale: 1.364, anchorY: .78, offsetX: .04, offsetY: -.03 },
+  { id: "wine-heart", asset: "/assets/ar/wine-heart-mask.webp", scale: 1.193, anchorY: .78, offsetX: .02, offsetY: .08 },
 ];
 
 const products = window.ASPECT_PRODUCTS || [];
@@ -60,12 +60,13 @@ const cameraChannel = typeof BroadcastChannel === "function"
   ? new BroadcastChannel("aspect-camera-session")
   : null;
 const CAMERA_REQUEST_KEY = "aspect-camera-request";
-const FIT_STORAGE_KEY = "aspect-mask-fits-v1";
+const FIT_STORAGE_KEY = "aspect-mask-fits-v2";
+const MASK_COLOR_FILTER = "saturate(0.82) brightness(0.96)";
 
 if (isAndroid) {
   androidCameraNote.hidden = false;
   startButton.textContent = "live camera (beta)";
-  selfieCameraButton.textContent = "open Android camera — recommended";
+  if (selfieCameraButton) selfieCameraButton.textContent = "open Android camera — recommended";
 }
 
 let faceLandmarker = null;
@@ -523,6 +524,7 @@ function drawMask(pose) {
     pose.y + pose.width * (selectedMask.offsetY + fit.y)
   );
   ctx.rotate(pose.angle);
+  ctx.filter = MASK_COLOR_FILTER;
   ctx.drawImage(
     selectedImage,
     -width * .5,
@@ -732,7 +734,7 @@ const requestedMask = new URLSearchParams(location.search).get("mask");
 selectMask(maskById.has(requestedMask) ? requestedMask : MASKS[0].id);
 
 startButton.addEventListener("click", startCamera);
-selfieCameraButton.addEventListener("click", openSelfieCamera);
+selfieCameraButton?.addEventListener("click", openSelfieCamera);
 selfieErrorButton.addEventListener("click", openSelfieCamera);
 selfieInput.addEventListener("change", () => loadSelfie(selfieInput.files?.[0]));
 retryButton.addEventListener("click", () => {

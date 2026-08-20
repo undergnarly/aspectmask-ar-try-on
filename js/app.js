@@ -95,11 +95,9 @@
   // ---------- sold archive + verified industry proof ----------
   const archiveItems = Array.isArray(window.ASPECT_ARCHIVE) ? window.ASPECT_ARCHIVE : [];
   const archiveGrid = document.getElementById("archive-grid");
-  const archiveMore = document.getElementById("archive-more");
   const archiveLightbox = document.getElementById("archive-lightbox");
   const archiveLightboxImage = document.getElementById("archive-lightbox-image");
   const archiveLightboxName = document.getElementById("archive-lightbox-name");
-  const archiveInitialCount = 8;
 
   function closeArchiveLightbox() {
     archiveLightbox?.classList.remove("open");
@@ -109,11 +107,10 @@
 
   if (archiveGrid && archiveItems.length) {
     archiveGrid.innerHTML = archiveItems.map((piece, index) => `
-      <button class="archive-piece" type="button" data-archive-index="${index}" ${index >= archiveInitialCount ? "hidden" : ""}>
+      <button class="archive-piece" type="button" data-archive-index="${index}">
         <img src="${piece.src}" width="${piece.width}" height="${piece.height}" alt="${piece.name}, a sold one-of-one ASPECT mask" loading="lazy" decoding="async" />
         <span>${piece.name}</span>
       </button>`).join("");
-    if (archiveItems.length > archiveInitialCount) archiveMore.hidden = false;
 
     archiveGrid.addEventListener("click", (event) => {
       const button = event.target.closest(".archive-piece");
@@ -131,20 +128,41 @@
     document.querySelector(".archive-section")?.setAttribute("hidden", "");
   }
 
-  archiveMore?.addEventListener("click", () => {
-    archiveGrid.querySelectorAll(".archive-piece[hidden]").forEach((piece) => { piece.hidden = false; });
-    archiveMore.hidden = true;
-    track("archive_expand", { piece_count: archiveItems.length });
-  });
   document.getElementById("archive-lightbox-close")?.addEventListener("click", closeArchiveLightbox);
   archiveLightbox?.addEventListener("click", (event) => {
     if (event.target === archiveLightbox) closeArchiveLightbox();
   });
+  const asSeenModal = document.getElementById("as-seen-modal");
+  const asSeenEmbed = document.getElementById("as-seen-embed");
+  const asSeenInstagramLink = document.getElementById("as-seen-instagram-link");
+
+  function closeAsSeenModal() {
+    asSeenModal?.classList.remove("open");
+    asSeenModal?.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("as-seen-modal-open");
+    if (asSeenEmbed) asSeenEmbed.src = "";
+  }
+
   document.querySelectorAll(".as-seen-card").forEach((card) => {
     card.addEventListener("click", () => {
+      if (asSeenEmbed && asSeenModal) {
+        asSeenEmbed.src = card.dataset.embed;
+        asSeenEmbed.title = `${card.dataset.proof} on Instagram`;
+        asSeenInstagramLink.href = card.dataset.instagramUrl;
+        asSeenModal.classList.add("open");
+        asSeenModal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("as-seen-modal-open");
+      }
       track("as_seen_open", { proof_name: card.dataset.proof });
       fbTrack("AsSeenOpen", { proof_name: card.dataset.proof }, false);
     });
+  });
+  document.getElementById("as-seen-modal-close")?.addEventListener("click", closeAsSeenModal);
+  asSeenModal?.addEventListener("click", (event) => {
+    if (event.target === asSeenModal) closeAsSeenModal();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && asSeenModal?.classList.contains("open")) closeAsSeenModal();
   });
 
   // ---------- helpers ----------

@@ -429,16 +429,19 @@ body.is-ready .hero-photo-overlay-text { animation: hero-copy-in 1s .22s cubic-b
 .section-note { margin-top: 10px; color: var(--muted); font-size: 10.5px; line-height: 1.45; }
 .section-intro { max-width: 420px; margin-top: 12px; color: #cbd0d0; font-size: 14px; line-height: 1.55; }
 .archive-section { padding: 68px 0 72px; background: #030208; }
-.archive-grid { columns: 2; column-gap: 8px; margin-top: 28px; }
+.archive-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px;
+  margin-top: 28px;
+}
 .archive-piece {
-  position: relative; width: 100%; margin: 0 0 8px; padding: 0; break-inside: avoid;
+  position: relative; width: 100%; aspect-ratio: 3 / 4; margin: 0; padding: 0;
   display: block; overflow: hidden; border: 0; border-radius: var(--radius);
   background: #0e0c11; color: var(--fg); text-align: left;
 }
 .archive-piece[hidden] { display: none; }
-.archive-piece img { display: block; width: 100%; height: auto; min-height: 150px; object-fit: cover; transition: transform .7s cubic-bezier(.2,.8,.2,1); }
+.archive-piece img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .7s cubic-bezier(.2,.8,.2,1); }
 .archive-piece::after { content: ""; position: absolute; inset: 48% 0 0; background: linear-gradient(transparent, rgba(2,1,5,.82)); }
-.archive-piece span { position: absolute; z-index: 1; left: 11px; right: 11px; bottom: 10px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.archive-piece span { position: absolute; z-index: 1; left: 7px; right: 7px; bottom: 7px; font-size: 8px; line-height: 1.2; letter-spacing: .06em; text-transform: uppercase; }
 .archive-piece:active img { transform: scale(1.025); }
 .archive-more {
   display: block; width: 100%; margin-top: 18px; padding: 15px 18px; border: 0; border-radius: var(--radius);
@@ -448,11 +451,15 @@ body.is-ready .hero-photo-overlay-text { animation: hero-copy-in 1s .22s cubic-b
 }
 .archive-more[hidden] { display: none; }
 .as-seen-section { padding: 68px 0 72px; overflow: hidden; background: linear-gradient(180deg, #030208, #12080d); }
-.as-seen-track { display: flex; gap: 10px; margin-top: 28px; padding-right: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.as-seen-track {
+  display: flex; gap: 10px; margin-top: 28px; padding-right: 20px;
+  overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory;
+  scrollbar-width: none; touch-action: pan-x pan-y;
+}
 .as-seen-track::-webkit-scrollbar { display: none; }
 .as-seen-card {
   position: relative; flex: 0 0 82%; aspect-ratio: 4 / 5; overflow: hidden; scroll-snap-align: start;
-  border-radius: var(--radius); background: #17121a; color: #fff; text-decoration: none;
+  padding: 0; border: 0; border-radius: var(--radius); background: #17121a; color: #fff; text-align: left;
 }
 .as-seen-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .8s cubic-bezier(.2,.8,.2,1); }
 .as-seen-card:active img { transform: scale(1.025); }
@@ -461,6 +468,24 @@ body.is-ready .hero-photo-overlay-text { animation: hero-copy-in 1s .22s cubic-b
 .as-seen-type { top: 16px; color: #f2c8ce; font-size: 9px; letter-spacing: .15em; text-transform: uppercase; }
 .as-seen-card strong { bottom: 42px; font: 400 25px/1.05 var(--font-display); }
 .as-seen-open { bottom: 17px; color: rgba(255,255,255,.72); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+
+.as-seen-modal {
+  position: fixed; z-index: 90; inset: 0; display: none; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px; padding: 54px 14px 18px;
+  background: rgba(2,1,5,.97); overscroll-behavior: contain;
+}
+.as-seen-modal.open { display: flex; }
+.as-seen-modal iframe {
+  display: block; width: min(100%, 540px); height: min(760px, calc(100svh - 112px));
+  border: 0; border-radius: var(--radius); background: #fff;
+}
+.as-seen-modal-close {
+  position: absolute; top: max(12px, env(safe-area-inset-top)); right: 14px;
+  width: 40px; height: 40px; border: 0; border-radius: 50%;
+  background: rgba(255,255,255,.1); color: #fff; font-size: 25px;
+}
+.as-seen-instagram-link { color: rgba(255,255,255,.68); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+body.as-seen-modal-open { overflow: hidden; }
 
 .archive-lightbox { position: fixed; z-index: 80; inset: 0; display: none; align-items: center; justify-content: center; padding: 54px 18px 30px; background: rgba(2,1,5,.96); }
 .archive-lightbox.open { display: flex; flex-direction: column; }

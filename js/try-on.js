@@ -37,6 +37,8 @@ const errorCopy = document.getElementById("try-on-error-copy");
 const hint = document.getElementById("tracking-hint");
 const picker = document.getElementById("mask-picker");
 const selectedName = document.getElementById("selected-mask-name");
+const maskCount = document.getElementById("try-on-mask-count");
+const maskAvailability = document.getElementById("mask-availability");
 const captureButton = document.getElementById("capture-btn");
 const androidCameraNote = document.getElementById("android-camera-note");
 const fitToggle = document.getElementById("fit-toggle");
@@ -195,10 +197,18 @@ function productThumb(id) {
   return image ? `/assets/products/${id}/${image.src}` : "/assets/brand/og-cover.jpg";
 }
 
+function shortMaskName(id) {
+  return productName(id).replace(/\s+Mask$/i, "");
+}
+
 function buildPicker() {
+  const availableLabel = `${MASKS.length} masks`;
+  if (maskCount) maskCount.textContent = availableLabel;
+  if (maskAvailability) maskAvailability.textContent = `${availableLabel} available`;
   picker.innerHTML = MASKS.map((mask) => `
     <button class="mask-option" type="button" data-mask-id="${mask.id}" aria-label="Try ${productName(mask.id)}">
       <img src="${productThumb(mask.id)}" alt="" loading="lazy" />
+      <span class="mask-option-name">${shortMaskName(mask.id)}</span>
     </button>
   `).join("");
 

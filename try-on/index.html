@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="robots" content="noindex" />
-  <title>Virtual Try-On — ASPECT</title>
+  <meta name="description" content="Try every available ASPECT mask live with your camera. The camera stays on your device." />
+  <meta name="theme-color" content="#030208" />
+  <title>Online Mask Try-On — ASPECT</title>
   <link rel="icon" type="image/png" href="/assets/brand/logo.png" />
-  <link rel="stylesheet" href="/css/try-on.css?v=20260817a" />
+  <link rel="stylesheet" href="/css/try-on.css?v=20260820a" />
 </head>
 <body>
   <main class="try-on" id="try-on-app">
@@ -25,9 +26,9 @@
     <div class="tracking-hint" id="tracking-hint" hidden>Move into the frame and look straight ahead</div>
 
     <section class="permission-card" id="permission-card">
-      <p class="eyebrow">Camera try-on · beta</p>
-      <h1>Meet your other self.</h1>
-      <p class="permission-copy">Your camera stays on this device. Nothing is uploaded or saved by ASPECT.</p>
+      <p class="eyebrow">Online try-on · <span id="try-on-mask-count">6 masks</span></p>
+      <h1>Try every ASPECT.</h1>
+      <p class="permission-copy">Choose any available mask below, then see it live. Your camera stays on this device — nothing is uploaded or saved by ASPECT.</p>
       <p class="android-camera-note" id="android-camera-note" hidden>
         Android: close other camera apps and floating bubbles before enabling the camera.
       </p>
@@ -45,8 +46,8 @@
 
     <footer class="mask-dock" id="mask-dock" aria-label="Choose a mask">
       <div class="mask-name-row">
-        <p id="selected-mask-name">Ruby Dune Mask</p>
-        <span>2D preview</span>
+        <p id="selected-mask-name" aria-live="polite">Ruby Dune Mask</p>
+        <span id="mask-availability">6 masks available</span>
       </div>
       <div class="mask-picker" id="mask-picker"></div>
       <button class="fit-toggle" id="fit-toggle" type="button" aria-expanded="false">adjust mask fit</button>
@@ -79,6 +80,6 @@
   </main>
 
   <script src="/js/products.js?v=20260817a"></script>
-  <script type="module" src="/js/try-on.js?v=20260820c"></script>
+  <script type="module" src="/js/try-on.js?v=20260820d"></script>
 </body>
 </html>

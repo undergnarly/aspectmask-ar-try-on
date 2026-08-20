@@ -487,6 +487,31 @@ body.is-ready .hero-photo-overlay-text { animation: hero-copy-in 1s .22s cubic-b
 .as-seen-instagram-link { color: rgba(255,255,255,.68); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
 body.as-seen-modal-open { overflow: hidden; }
 
+.sticky-try-on {
+  position: fixed; z-index: 45; left: 50%; bottom: calc(12px + env(safe-area-inset-bottom));
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px;
+  width: min(calc(100% - 24px), 520px); min-height: 62px; padding: 10px 15px;
+  border: 1px solid rgba(233,238,242,.25); border-radius: 9px;
+  background: rgba(16,10,15,.93); color: var(--fg); box-shadow: 0 15px 42px rgba(0,0,0,.48);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transform: translate(-50%, calc(100% + 28px));
+  transition: opacity .3s ease, transform .38s cubic-bezier(.22,.61,.36,1), visibility .3s step-end;
+}
+.sticky-try-on.is-visible {
+  opacity: 1; visibility: visible; pointer-events: auto; transform: translate(-50%, 0);
+  transition: opacity .3s ease, transform .38s cubic-bezier(.22,.61,.36,1), visibility 0s;
+}
+.sticky-try-on-pulse {
+  width: 13px; height: 13px; border-radius: 50%; background: var(--accent-bright);
+  box-shadow: 0 0 0 6px rgba(202,45,71,.16);
+}
+.sticky-try-on-copy { display: flex; min-width: 0; flex-direction: column; }
+.sticky-try-on-copy strong { font-size: 13px; font-weight: 500; line-height: 1.25; letter-spacing: .015em; }
+.sticky-try-on-copy small { margin-top: 2px; color: rgba(233,238,242,.58); font-size: 9px; letter-spacing: .055em; text-transform: uppercase; }
+.sticky-try-on-arrow { color: var(--accent-text); font-size: 22px; line-height: 1; }
+body.is-loading .sticky-try-on { opacity: 0; visibility: hidden; pointer-events: none; }
+
 .archive-lightbox { position: fixed; z-index: 80; inset: 0; display: none; align-items: center; justify-content: center; padding: 54px 18px 30px; background: rgba(2,1,5,.96); }
 .archive-lightbox.open { display: flex; flex-direction: column; }
 .archive-lightbox img { max-width: 100%; max-height: calc(100vh - 125px); border-radius: var(--radius); object-fit: contain; }
@@ -683,6 +708,10 @@ body.as-seen-modal-open { overflow: hidden; }
 /* ---------- small screens polish ---------- */
 @media (min-width: 480px) {
   .hero h1 { font-size: 38px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sticky-try-on { transition: none; }
 }
 
 /* Respect safe areas on iOS */

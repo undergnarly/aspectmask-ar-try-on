@@ -562,6 +562,26 @@
     location.href = `/try-on/?mask=${encodeURIComponent(currentProduct.id)}`;
   });
 
+  const stickyTryOn = document.getElementById("sticky-try-on");
+  let stickyTryOnFrame = 0;
+
+  function updateStickyTryOn() {
+    stickyTryOnFrame = 0;
+    stickyTryOn?.classList.toggle("is-visible", window.scrollY > 180);
+  }
+
+  function scheduleStickyTryOnUpdate() {
+    if (stickyTryOnFrame) return;
+    stickyTryOnFrame = requestAnimationFrame(updateStickyTryOn);
+  }
+
+  stickyTryOn?.addEventListener("click", () => {
+    track("try_on_click", { source: "sticky_home_cta" });
+    fbTrack("TryOnClick", { source: "sticky_home_cta" }, false);
+  });
+  window.addEventListener("scroll", scheduleStickyTryOnUpdate, { passive: true });
+  updateStickyTryOn();
+
   // Attaches the real <source src> (and starts playback) for the video in slide `idx`
   // and its immediate neighbors, the first time each is reached — see the note in
   // slideHTML()'s "video" branch above for why this is deferred instead of eager.
